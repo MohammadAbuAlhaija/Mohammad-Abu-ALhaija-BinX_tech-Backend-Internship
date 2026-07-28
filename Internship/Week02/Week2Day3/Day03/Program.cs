@@ -1,5 +1,20 @@
-﻿
+﻿using System.Diagnostics;
+
 Console.WriteLine("Async Operations Demo");
+
+Stopwatch stopwatch = Stopwatch.StartNew();
+
+string users = await GetUsersAsync();
+string orders = await GetOrdersAsync();
+string products = await GetProductsAsync();
+
+stopwatch.Stop();
+
+Console.WriteLine(users);
+Console.WriteLine(orders);
+Console.WriteLine(products);
+
+Console.WriteLine($"Total Time: {stopwatch.ElapsedMilliseconds} ms");
 
 static async Task<string> GetUsersAsync()
 {
