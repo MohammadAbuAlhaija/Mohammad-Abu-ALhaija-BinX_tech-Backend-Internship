@@ -15,7 +15,7 @@ Console.WriteLine(orders);
 Console.WriteLine(products);
 
 Console.WriteLine($"Total Time: {stopwatch.ElapsedMilliseconds} ms");
-*/
+
 Stopwatch stopwatch = Stopwatch.StartNew();
 
 Task<string> usersTask = GetUsersAsync();
@@ -31,7 +31,25 @@ Console.WriteLine(await ordersTask);
 Console.WriteLine(await productsTask);
 
 Console.WriteLine($"Total Time: {stopwatch.ElapsedMilliseconds} ms");
+*/
+CancellationTokenSource source = new();
 
+Task<string> ordersTask = GetOrdersAsync(source.Token);
+
+await Task.Delay(2000);
+
+source.Cancel();
+
+try
+{
+    string orders = await ordersTask;
+
+    Console.WriteLine(orders);
+}
+catch (OperationCanceledException)
+{
+    Console.WriteLine("Orders operation was cancelled");
+}
 
 static async Task<string> GetUsersAsync()
 {
@@ -39,9 +57,10 @@ static async Task<string> GetUsersAsync()
     return "Users";
 }
 
-static async Task<string> GetOrdersAsync()
+static async Task<string> GetOrdersAsync(CancellationToken token)
 {
-    await Task.Delay(3000);
+    await Task.Delay(5000, token);
+
     return "Orders";
 }
 
