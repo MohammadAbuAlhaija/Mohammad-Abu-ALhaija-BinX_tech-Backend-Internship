@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 
 Console.WriteLine("Async Operations Demo");
-
+/*
 Stopwatch stopwatch = Stopwatch.StartNew();
 
 string users = await GetUsersAsync();
@@ -15,6 +15,23 @@ Console.WriteLine(orders);
 Console.WriteLine(products);
 
 Console.WriteLine($"Total Time: {stopwatch.ElapsedMilliseconds} ms");
+*/
+Stopwatch stopwatch = Stopwatch.StartNew();
+
+Task<string> usersTask = GetUsersAsync();
+Task<string> ordersTask = GetOrdersAsync();
+Task<string> productsTask = GetProductsAsync();
+
+await Task.WhenAll(usersTask, ordersTask, productsTask);
+
+stopwatch.Stop();
+
+Console.WriteLine(await usersTask);
+Console.WriteLine(await ordersTask);
+Console.WriteLine(await productsTask);
+
+Console.WriteLine($"Total Time: {stopwatch.ElapsedMilliseconds} ms");
+
 
 static async Task<string> GetUsersAsync()
 {
