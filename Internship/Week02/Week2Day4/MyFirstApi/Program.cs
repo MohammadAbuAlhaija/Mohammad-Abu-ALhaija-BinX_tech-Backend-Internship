@@ -1,6 +1,7 @@
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+
+builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
@@ -37,6 +38,37 @@ app.MapGet("/weatherforecast", () =>
     return forecast;
 })
 .WithName("GetWeatherForecast");
+
+app.MapGet("/cars", () =>
+{
+    var cars = new List<string>
+    {
+        "BMW",
+        "Kia",
+        "Toyota"
+    };
+
+    return cars;
+});
+
+app.MapGet("/cars/{id}", (int id) =>
+{
+    var cars = new List<string>
+    {
+        "BMW",
+        "Kia",
+        "Toyota"
+    };
+
+    if (id < 1 || id > cars.Count)
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Ok(cars[id - 1]);
+});
+
+app.MapControllers();
 
 app.Run();
 
