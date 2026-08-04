@@ -1,12 +1,20 @@
+using Microsoft.EntityFrameworkCore;
+using MyFirstApi.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
-
+// Add controllers and OpenAPI services
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
+// Register the database context and connect it to SQL Server
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")));
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Enable OpenAPI and Swagger UI during development
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -25,6 +33,7 @@ var summaries = new[]
     "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
 
+// Sample weather endpoint
 app.MapGet("/weatherforecast", () =>
 {
     var forecast = Enumerable.Range(1, 5)
@@ -39,6 +48,7 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast");
 
+// Sample endpoint that returns all cars
 app.MapGet("/cars", () =>
 {
     var cars = new List<string>
@@ -51,6 +61,7 @@ app.MapGet("/cars", () =>
     return cars;
 });
 
+// Sample endpoint that returns one car by id
 app.MapGet("/cars/{id}", (int id) =>
 {
     var cars = new List<string>
