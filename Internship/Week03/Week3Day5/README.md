@@ -136,19 +136,19 @@ This makes it easy to switch between Local, Staging, or Production environments 
 
 ### GitHub Repository
 
-> Add your GitHub repository link here.
+>https://github.com/MohammadAbuAlhaija/Mohammad-Abu-ALhaija-BinX_tech-Backend-Internship.git
 
 ---
 
 ### REST API Design (Notion)
 
-> Add your Notion REST Design link here.
+> https://nasal-replace-1d7.notion.site/REST-API-Resource-Map-3b0f843800de80e29337d77495621f0d?source=copy_link
 
 ---
 
 ### Exported Postman Collection
 
-> Add the exported Postman Collection (.json) file or its GitHub link here.
+> Internship/Week03/Week3Day5/Postman Cars V2/Cars.postman_collection.json
 
 ---
 
