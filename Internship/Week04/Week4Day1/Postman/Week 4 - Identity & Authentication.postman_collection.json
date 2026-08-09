@@ -1,0 +1,77 @@
+{
+  "info": {
+    "_postman_id": "f58d0224-ea33-44cd-9a71-169ec422a841",
+    "name": "Week 4 - Identity & Authentication",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "56986320",
+    "_collection_link": "https://go.postman.co/collection/56986320-f58d0224-ea33-44cd-9a71-169ec422a841?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Register User - Valid",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5220/api/auth/register?email=mohammad@example.com&password=MMM123%26a",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5220",
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ],
+          "query": [
+            {
+              "key": "email",
+              "value": "mohammad@example.com",
+              "type": "text"
+            },
+            {
+              "key": "password",
+              "value": "MMM123&a",
+              "type": "text"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Register User - Weak Password",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5220/api/auth/register?email=ali@example.com&password=123",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5220",
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ],
+          "query": [
+            {
+              "key": "email",
+              "value": "ali@example.com",
+              "type": "text"
+            },
+            {
+              "key": "password",
+              "value": "123",
+              "type": "text"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
