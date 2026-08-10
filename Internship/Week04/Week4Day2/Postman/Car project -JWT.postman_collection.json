@@ -1,0 +1,164 @@
+{
+  "info": {
+    "_postman_id": "63c9c105-136e-47bd-ae87-702ea361419c",
+    "name": "Car project -JWT",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "56986320",
+    "_collection_link": "https://go.postman.co/collection/56986320-63c9c105-136e-47bd-ae87-702ea361419c?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Login - Valid Credentials",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5220/api/auth/login?email=ahmad@example.com&password=Ahmad123!",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5220",
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ],
+          "query": [
+            {
+              "key": "email",
+              "value": "ahmad@example.com"
+            },
+            {
+              "key": "password",
+              "value": "Ahmad123!"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Register - Ahmad",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5220/api/auth/register?email=ahmad@example.com&password=Ahmad123!",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5220",
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ],
+          "query": [
+            {
+              "key": "email",
+              "value": "ahmad@example.com",
+              "type": "text"
+            },
+            {
+              "key": "password",
+              "value": "Ahmad123!",
+              "type": "text"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login - Invalid Credentials",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5220/api/auth/login?email=ahmad@example.com&password=WrongPassword",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5220",
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ],
+          "query": [
+            {
+              "key": "email",
+              "value": "ahmad@example.com",
+              "type": "text"
+            },
+            {
+              "key": "password",
+              "value": "WrongPassword",
+              "type": "text"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Cars - No Token",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5220/api/cars",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5220",
+          "path": [
+            "api",
+            "cars"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Cars - Valid Token",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{json_web_token_13iz}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5220/api/cars",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5220",
+          "path": [
+            "api",
+            "cars"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "json_web_token_13iz",
+      "secret": true
+    }
+  ]
+}
