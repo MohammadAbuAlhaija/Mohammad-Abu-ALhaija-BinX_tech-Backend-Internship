@@ -1,0 +1,183 @@
+{
+  "info": {
+    "_postman_id": "91e9c43d-eadf-4d06-89a5-65c4ca1df972",
+    "name": "Week 4 Day 4 - FluentValidation",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "56986320",
+    "_collection_link": "https://go.postman.co/collection/56986320-91e9c43d-eadf-4d06-89a5-65c4ca1df972?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Create Car - Invalid Make",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"make\": \"\",\r\n  \"model\": \"Sportage\",\r\n  \"year\": 2024,\r\n  \"color\": \"Black\",\r\n  \"vin\": \"1HGCM82633A004352\",\r\n  \"price\": 32000,\r\n  \"status\": \"Available\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5220/api/cars",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5220",
+          "path": [
+            "api",
+            "cars"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Car - Invalid Year",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"make\": \"Kia\",\r\n  \"model\": \"Sportage\",\r\n  \"year\": 1940,\r\n  \"color\": \"Black\",\r\n  \"vin\": \"1HGCM82633A004352\",\r\n  \"price\": 32000,\r\n  \"status\": \"Available\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5220/api/cars",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5220",
+          "path": [
+            "api",
+            "cars"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Car - Multiple Validation Errors",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"make\": \"\",\r\n  \"model\": \"\",\r\n  \"year\": 1940,\r\n  \"color\": \"Black\",\r\n  \"vin\": \"12345\",\r\n  \"price\": -500,\r\n  \"status\": \"Available\"\r\n}\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5220/api/cars",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5220",
+          "path": [
+            "api",
+            "cars"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Car - Valid",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"make\": \"\",\r\n  \"model\": \"\",\r\n  \"year\": 1940,\r\n  \"color\": \"Black\",\r\n  \"vin\": \"12345\",\r\n  \"price\": -500,\r\n  \"status\": \"Available\"\r\n}\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5220/api/cars",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5220",
+          "path": [
+            "api",
+            "cars"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login Admin",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "Update Car - Multiple Validation Errors",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    }
+  ]
+}
