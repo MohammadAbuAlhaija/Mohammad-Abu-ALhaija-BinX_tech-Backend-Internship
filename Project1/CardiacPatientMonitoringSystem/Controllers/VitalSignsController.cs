@@ -1,6 +1,7 @@
 using CardiacPatientMonitoringSystem.Data;
 using CardiacPatientMonitoringSystem.DTOs;
 using CardiacPatientMonitoringSystem.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,6 +9,7 @@ namespace CardiacPatientMonitoringSystem.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class VitalSignsController : ControllerBase
 {
     private readonly AppDbContext _context;

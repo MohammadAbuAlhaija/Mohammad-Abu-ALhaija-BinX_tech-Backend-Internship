@@ -3,11 +3,13 @@ using CardiacPatientMonitoringSystem.DTOs;
 using CardiacPatientMonitoringSystem.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CardiacPatientMonitoringSystem.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class MedicationsController : ControllerBase
 {
     private readonly AppDbContext _context;
