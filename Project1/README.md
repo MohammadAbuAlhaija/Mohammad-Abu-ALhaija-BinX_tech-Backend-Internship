@@ -8,12 +8,12 @@ The idea of the system is to provide a backend API for managing cardiac patients
 
 The system currently manages four main resources:
 
-- Patients
-- Vital Signs
-- Medications
-- Appointments
+* Patients
+* Vital Signs
+* Medications
+* Appointments
 
-I built the project step by step, starting with the project structure and data models, then connecting the API to SQL Server using Entity Framework Core. After that, I implemented the CRUD operations, authentication and authorization, input validation, middleware, seed data, filtering, Swagger documentation, and Postman testing.
+I built the project step by step, starting with the project structure and data models, then connecting the API to SQL Server using Entity Framework Core. After that, I implemented the CRUD operations, authentication and authorization, input validation, middleware, seed data, filtering, Swagger documentation, Postman testing, and the first automated unit tests using xUnit.
 
 The project uses only synthetic test data and does not contain real patient information.
 
@@ -25,29 +25,33 @@ This project helped me connect many backend concepts together instead of practic
 
 During the project, I worked with:
 
-- ASP.NET Core Web API
-- Controllers and Routing
-- Dependency Injection
-- Middleware
-- Async/Await
-- LINQ
-- DTOs
-- Entity Framework Core
-- SQL Server
-- Code-First Migrations
-- Entity Relationships
-- CRUD Operations
-- Synthetic Seed Data
-- ASP.NET Core Identity
-- JWT Authentication
-- Protected API Routes
-- FluentValidation
-- HTTP Status Codes
-- Filtering
-- Swagger / OpenAPI
-- Postman
+* ASP.NET Core Web API
+* Controllers and Routing
+* Dependency Injection
+* Middleware
+* Async/Await
+* LINQ
+* DTOs
+* Entity Framework Core
+* SQL Server
+* Code-First Migrations
+* Entity Relationships
+* CRUD Operations
+* Synthetic Seed Data
+* ASP.NET Core Identity
+* JWT Authentication
+* Protected API Routes
+* FluentValidation
+* HTTP Status Codes
+* Filtering
+* Swagger / OpenAPI
+* Postman
+* xUnit
+* Unit Testing
+* `[Fact]` and `[Theory]`
+* Arrange-Act-Assert
 
-The most useful part for me was seeing how these concepts work together in one request flow: a request reaches the API, passes through the middleware and authentication pipeline, gets validated, reaches the controller, and then uses Entity Framework Core to communicate with the database.
+The most useful part for me was seeing how these concepts work together in one project. I was also able to start testing individual pieces of application logic separately using unit tests instead of depending only on API testing through Postman.
 
 ---
 
@@ -70,6 +74,9 @@ Project1/
 │   ├── Program.cs
 │   └── appsettings.json
 │
+├── CardiacPatientMonitoringSystem.Tests/
+│   └── PatientServiceTests.cs
+│
 ├── Postman/
 │   └── Cardiac Patient Monitoring System.postman_collection.json
 │
@@ -80,29 +87,32 @@ Project1/
 
 ### Main Folders
 
-**Controllers/**  
+**Controllers/**
 Contains the API endpoints for authentication, patients, vital signs, medications, and appointments.
 
-**Models/**  
+**Models/**
 Contains the Entity Framework Core entities that represent the database tables.
 
-**DTOs/**  
+**DTOs/**
 Contains the request objects used when creating and updating resources. I used DTOs so that API requests are separated from the database entities.
 
-**Data/**  
+**Data/**
 Contains `AppDbContext`, which is responsible for the connection between Entity Framework Core and SQL Server.
 
-**Migrations/**  
+**Migrations/**
 Contains the EF Core migrations used to create and update the database schema.
 
-**Validators/**  
+**Validators/**
 Contains the FluentValidation rules for the Create and Update request DTOs.
 
-**Middleware/**  
+**Middleware/**
 Contains the custom request logging middleware.
 
-**Services/**  
-Reserved for service/business logic if it becomes necessary as the project grows.
+**Services/**
+Contains simple application logic that can be separated from the controllers. I currently use `PatientService` for the patient age calculation used in the first unit tests.
+
+**CardiacPatientMonitoringSystem.Tests/**
+Contains the automated unit tests written using xUnit. The test project references the main API project so application logic can be tested independently.
 
 ---
 
@@ -160,9 +170,9 @@ I used EF Core migrations to build and update the database instead of manually c
 
 The project currently includes migrations for:
 
-- Initial database creation
-- ASP.NET Core Identity
-- Synthetic seed data
+* Initial database creation
+* ASP.NET Core Identity
+* Synthetic seed data
 
 The main commands I used were:
 
@@ -181,10 +191,10 @@ I added synthetic seed data so the database contains example information after t
 
 The seed data includes:
 
-- A patient
-- A vital-sign measurement
-- A medication
-- An appointment
+* A patient
+* A vital-sign measurement
+* A medication
+* An appointment
 
 The seeded patient uses:
 
@@ -210,13 +220,13 @@ Adding seed data made the project easier to test after creating the database bec
 
 The Patient API supports full asynchronous CRUD operations.
 
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| GET | `/api/patients` | Get all patients |
-| GET | `/api/patients/{id}` | Get a patient by ID |
-| POST | `/api/patients` | Create a patient |
-| PUT | `/api/patients/{id}` | Update a patient |
-| DELETE | `/api/patients/{id}` | Delete a patient |
+| Method | Endpoint             | Description         |
+| ------ | -------------------- | ------------------- |
+| GET    | `/api/patients`      | Get all patients    |
+| GET    | `/api/patients/{id}` | Get a patient by ID |
+| POST   | `/api/patients`      | Create a patient    |
+| PUT    | `/api/patients/{id}` | Update a patient    |
+| DELETE | `/api/patients/{id}` | Delete a patient    |
 
 I used asynchronous EF Core methods such as:
 
@@ -244,21 +254,21 @@ The Vital Signs module stores measurements related to a patient.
 
 The current model contains:
 
-- Heart Rate
-- Systolic Blood Pressure
-- Diastolic Blood Pressure
-- Measurement Date and Time
-- Patient ID
+* Heart Rate
+* Systolic Blood Pressure
+* Diastolic Blood Pressure
+* Measurement Date and Time
+* Patient ID
 
 The available endpoints are:
 
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| GET | `/api/vitalsigns` | Get all vital signs |
-| GET | `/api/vitalsigns/{id}` | Get a vital sign by ID |
-| POST | `/api/vitalsigns` | Create a vital sign |
-| PUT | `/api/vitalsigns/{id}` | Update a vital sign |
-| DELETE | `/api/vitalsigns/{id}` | Delete a vital sign |
+| Method | Endpoint               | Description            |
+| ------ | ---------------------- | ---------------------- |
+| GET    | `/api/vitalsigns`      | Get all vital signs    |
+| GET    | `/api/vitalsigns/{id}` | Get a vital sign by ID |
+| POST   | `/api/vitalsigns`      | Create a vital sign    |
+| PUT    | `/api/vitalsigns/{id}` | Update a vital sign    |
+| DELETE | `/api/vitalsigns/{id}` | Delete a vital sign    |
 
 Before creating or updating a vital sign, I also check that the referenced patient exists.
 
@@ -285,22 +295,22 @@ The Medication module allows medications to be associated with a patient.
 
 Each medication contains information such as:
 
-- Medication name
-- Dosage
-- Frequency
-- Start date
-- Optional end date
-- Patient ID
+* Medication name
+* Dosage
+* Frequency
+* Start date
+* Optional end date
+* Patient ID
 
 Available endpoints:
 
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| GET | `/api/medications` | Get all medications |
-| GET | `/api/medications/{id}` | Get a medication by ID |
-| POST | `/api/medications` | Create a medication |
-| PUT | `/api/medications/{id}` | Update a medication |
-| DELETE | `/api/medications/{id}` | Delete a medication |
+| Method | Endpoint                | Description            |
+| ------ | ----------------------- | ---------------------- |
+| GET    | `/api/medications`      | Get all medications    |
+| GET    | `/api/medications/{id}` | Get a medication by ID |
+| POST   | `/api/medications`      | Create a medication    |
+| PUT    | `/api/medications/{id}` | Update a medication    |
+| DELETE | `/api/medications/{id}` | Delete a medication    |
 
 Just like Vital Signs, I verify that the patient exists before creating or updating the medication.
 
@@ -320,21 +330,21 @@ The Appointment module manages patient appointments.
 
 An appointment contains:
 
-- Patient ID
-- Appointment date
-- Doctor name
-- Reason
-- Status
+* Patient ID
+* Appointment date
+* Doctor name
+* Reason
+* Status
 
 Available endpoints:
 
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| GET | `/api/appointments` | Get all appointments |
-| GET | `/api/appointments/{id}` | Get an appointment by ID |
-| POST | `/api/appointments` | Create an appointment |
-| PUT | `/api/appointments/{id}` | Update an appointment |
-| DELETE | `/api/appointments/{id}` | Delete an appointment |
+| Method | Endpoint                 | Description              |
+| ------ | ------------------------ | ------------------------ |
+| GET    | `/api/appointments`      | Get all appointments     |
+| GET    | `/api/appointments/{id}` | Get an appointment by ID |
+| POST   | `/api/appointments`      | Create an appointment    |
+| PUT    | `/api/appointments/{id}` | Update an appointment    |
+| DELETE | `/api/appointments/{id}` | Delete an appointment    |
 
 ### Get All Appointments
 
@@ -412,10 +422,10 @@ HMAC SHA-256
 
 The API validates:
 
-- Issuer
-- Audience
-- Token lifetime
-- Signing key
+* Issuer
+* Audience
+* Token lifetime
+* Signing key
 
 A successful login returns a token that can then be sent with protected API requests.
 
@@ -443,10 +453,10 @@ The main resource controllers are protected using:
 
 This includes:
 
-- Patients
-- Vital Signs
-- Medications
-- Appointments
+* Patients
+* Vital Signs
+* Medications
+* Appointments
 
 The authentication endpoints remain available without a JWT because users need to register and login before they have a token.
 
@@ -498,19 +508,19 @@ I used **FluentValidation** instead of placing validation logic directly inside 
 
 I created validators for both Create and Update DTOs for:
 
-- Patient
-- Vital Sign
-- Medication
-- Appointment
+* Patient
+* Vital Sign
+* Medication
+* Appointment
 
 For example, the Patient validator checks that:
 
-- Full name is provided
-- Date of birth is provided
-- Date of birth is in the past
-- Gender is provided
-- Phone number is provided
-- Address is provided
+* Full name is provided
+* Date of birth is provided
+* Date of birth is in the past
+* Gender is provided
+* Phone number is provided
+* Address is provided
 
 Example:
 
@@ -556,14 +566,14 @@ While testing the API, I made sure that the endpoints return HTTP status codes t
 
 Some of the main responses I tested are:
 
-| Status Code | Meaning | Example |
-| --- | --- | --- |
-| `200 OK` | Successful request | Getting resources |
-| `201 Created` | Resource successfully created | Creating a patient |
-| `204 No Content` | Successful operation without response body | Update/Delete |
-| `400 Bad Request` | Invalid input | FluentValidation failure |
-| `401 Unauthorized` | Authentication required | Missing JWT |
-| `404 Not Found` | Resource does not exist | Invalid patient ID |
+| Status Code        | Meaning                                    | Example                  |
+| ------------------ | ------------------------------------------ | ------------------------ |
+| `200 OK`           | Successful request                         | Getting resources        |
+| `201 Created`      | Resource successfully created              | Creating a patient       |
+| `204 No Content`   | Successful operation without response body | Update/Delete            |
+| `400 Bad Request`  | Invalid input                              | FluentValidation failure |
+| `401 Unauthorized` | Authentication required                    | Missing JWT              |
+| `404 Not Found`    | Resource does not exist                    | Invalid patient ID       |
 
 ---
 
@@ -628,6 +638,112 @@ This helped me understand that middleware sits in the request pipeline and can e
 
 ---
 
+# Unit Testing with xUnit
+
+As the next step in the project, I started adding automated unit tests using **xUnit**.
+
+I created a separate test project:
+
+```text
+CardiacPatientMonitoringSystem.Tests
+```
+
+and referenced the main `CardiacPatientMonitoringSystem` project from it.
+
+This keeps the tests separate from the main API while still allowing them to access the application classes that need to be tested.
+
+## PatientService
+
+For the first unit-testing exercise, I added a simple `PatientService` containing a pure method for calculating a patient's age.
+
+```csharp
+public int CalculateAge(DateTime dateOfBirth, DateTime referenceDate)
+{
+    int age = referenceDate.Year - dateOfBirth.Year;
+
+    if (dateOfBirth.Date > referenceDate.AddYears(-age).Date)
+    {
+        age--;
+    }
+
+    return age;
+}
+```
+
+The method does not depend on the database, HTTP requests, or any external service, which makes it suitable for a basic unit test.
+
+I used a reference date as an input instead of using the current system date directly. This keeps the test predictable because the same input will always produce the same expected result.
+
+## Fact Tests
+
+I wrote three `[Fact]` tests for `CalculateAge()`.
+
+The tests cover:
+
+* A birthday that has already passed during the reference year.
+* A birthday that has not occurred yet.
+* A birthday that occurs on the reference date.
+
+Each test follows the **Arrange-Act-Assert** pattern.
+
+```text
+Arrange
+   ↓
+Prepare the service and test data
+
+Act
+   ↓
+Call CalculateAge()
+
+Assert
+   ↓
+Verify the returned age
+```
+
+Using this pattern made each test easier to read because the setup, action, and expected result are clearly separated.
+
+## Theory Test
+
+I also created a `[Theory]` test using `[InlineData]`.
+
+Instead of writing a separate test method for every set of inputs, the same test can run multiple times with different dates and expected ages.
+
+The Theory currently covers three different input cases.
+
+This helped me understand the main difference between the two xUnit test types:
+
+**`[Fact]`** — useful for testing one specific scenario.
+
+**`[Theory]`** — useful for running the same test logic with multiple sets of input data.
+
+## Running the Tests
+
+I can run the test project using:
+
+```bash
+dotnet test CardiacPatientMonitoringSystem.Tests
+```
+
+The current test run contains:
+
+```text
+3 Fact test cases
++
+3 Theory input cases
+=
+6 test cases
+```
+
+All six test cases passed successfully.
+
+### xUnit Test Results
+
+![xUnit Tests Passed](./screenshots/xunit-tests-passed.png)
+
+Adding unit testing showed me a different way of verifying the project. Postman and Swagger are useful for testing the API through HTTP requests, while xUnit allows me to test a small piece of application logic directly without starting the API or connecting to the database.
+
+---
+
 # Swagger / OpenAPI
 
 I configured Swagger so the API can be explored and tested without needing a separate frontend application.
@@ -658,50 +774,50 @@ The collection contains requests for:
 
 ### Authentication
 
-- Register User
-- Login User
-- Protected request without token
-- Protected request with token
+* Register User
+* Login User
+* Protected request without token
+* Protected request with token
 
 ### Patients
 
-- Create
-- Get All
-- Get By ID
-- Update
-- Delete
-- Not Found test
-- Validation error test
+* Create
+* Get All
+* Get By ID
+* Update
+* Delete
+* Not Found test
+* Validation error test
 
 ### Vital Signs
 
-- Create
-- Get All
-- Get By ID
-- Update
-- Delete
+* Create
+* Get All
+* Get By ID
+* Update
+* Delete
 
 ### Medications
 
-- Create
-- Get All
-- Get By ID
-- Update
-- Delete
+* Create
+* Get All
+* Get By ID
+* Update
+* Delete
 
 ### Appointments
 
-- Create
-- Get All
-- Get By ID
-- Update
-- Delete
-- Filter by status
+* Create
+* Get All
+* Get By ID
+* Update
+* Delete
+* Filter by status
 
 The exported Postman collection is available at:
 
 ```text
-Postman/CardiacPatientMonitoringSystem.postman_collection.json
+Postman/Cardiac Patient Monitoring System.postman_collection.json
 ```
 
 Using Postman throughout development helped me test each feature immediately after implementing it instead of waiting until the whole project was finished.
@@ -714,9 +830,9 @@ Using Postman throughout development helped me test each feature immediately aft
 
 To run the project locally, the following are required:
 
-- .NET 10 SDK
-- SQL Server LocalDB
-- Entity Framework Core CLI tools
+* .NET 10 SDK
+* SQL Server LocalDB
+* Entity Framework Core CLI tools
 
 ---
 
@@ -774,6 +890,22 @@ http://localhost:5075/swagger
 
 ---
 
+# Running the Unit Tests
+
+The xUnit test project can be run separately from the API.
+
+From the `Project1` directory:
+
+```bash
+dotnet test CardiacPatientMonitoringSystem.Tests
+```
+
+This builds both the main project and the test project and then runs the available automated tests.
+
+The API does not need to be running in Swagger or Postman for the current unit tests because `PatientService.CalculateAge()` has no external dependencies.
+
+---
+
 # Database Configuration
 
 The development database connection is configured using:
@@ -817,6 +949,18 @@ HTTP Response
 ```
 
 Building the project this way helped me see how the individual topics from the training connect together inside a real backend application.
+
+Unit tests follow a different path because they can test application logic directly without sending an HTTP request:
+
+```text
+xUnit Test
+    ↓
+PatientService
+    ↓
+CalculateAge()
+    ↓
+Assert Result
+```
 
 ---
 
@@ -916,6 +1060,14 @@ The following screenshots were captured while implementing and testing the proje
 
 ---
 
+## Unit Testing
+
+### xUnit Tests
+
+![xUnit Tests Passed](./screenshots/xunit-tests-passed.png)
+
+---
+
 ## Swagger
 
 ### API Documentation
@@ -930,35 +1082,44 @@ The biggest benefit of this project was moving from small separate exercises int
 
 I became more comfortable with:
 
-- Designing entities and relationships before implementing endpoints.
-- Using DTOs instead of exposing entity classes directly for create/update requests.
-- Working with SQL Server through Entity Framework Core.
-- Creating and applying migrations.
-- Writing asynchronous CRUD operations.
-- Using LINQ inside EF Core queries.
-- Understanding foreign-key relationships between resources.
-- Using Identity for user and password management.
-- Generating and validating JWT tokens.
-- Protecting API endpoints.
-- Validating incoming requests before performing database operations.
-- Returning meaningful HTTP status codes.
-- Understanding where middleware executes in the ASP.NET Core pipeline.
-- Testing APIs with both Postman and Swagger.
-- Keeping testing evidence while developing instead of only testing at the end.
+* Designing entities and relationships before implementing endpoints.
+* Using DTOs instead of exposing entity classes directly for create/update requests.
+* Working with SQL Server through Entity Framework Core.
+* Creating and applying migrations.
+* Writing asynchronous CRUD operations.
+* Using LINQ inside EF Core queries.
+* Understanding foreign-key relationships between resources.
+* Using Identity for user and password management.
+* Generating and validating JWT tokens.
+* Protecting API endpoints.
+* Validating incoming requests before performing database operations.
+* Returning meaningful HTTP status codes.
+* Understanding where middleware executes in the ASP.NET Core pipeline.
+* Testing APIs with both Postman and Swagger.
+* Creating a separate xUnit test project.
+* Referencing the main API project from a test project.
+* Understanding the difference between `[Fact]` and `[Theory]`.
+* Using `[InlineData]` to test multiple input cases.
+* Structuring unit tests using Arrange-Act-Assert.
+* Testing simple application logic independently from the API and database.
+* Keeping testing evidence while developing instead of only testing at the end.
 
 I also became more comfortable reading the complete request flow and understanding which part of the application is responsible for each operation.
+
+The introduction to unit testing also helped me understand that not every test needs to go through the complete HTTP request pipeline. Some logic can be tested directly, which makes it easier to verify a specific behavior and identify where a failure comes from.
 
 ---
 
 # Current Project Status
 
-At the current stage, I have completed the main API structure, database integration, CRUD modules, authentication, validation, middleware, filtering, seed data, Swagger documentation, and Postman verification.
+At the current stage, I have completed the main API structure, database integration, CRUD modules, authentication, validation, middleware, filtering, seed data, Swagger documentation, Postman verification, and the first automated unit tests using xUnit.
+
+The current unit tests focus on a simple patient-related service method and use both `[Fact]` and `[Theory]` to verify different age-calculation scenarios.
 
 The remaining training-aligned work will be completed after covering the corresponding topics:
 
-- Centralized error handling
-- xUnit automated testing
-- Moq
+* Centralized error handling
+* Moq and additional automated testing
 
 After those topics are implemented, I will perform the final project cleanup and update the documentation and test instructions accordingly.
 
@@ -966,18 +1127,19 @@ After those topics are implemented, I will perform the final project cleanup and
 
 # Technologies Used
 
-- C#
-- .NET 10
-- ASP.NET Core Web API
-- Entity Framework Core
-- SQL Server LocalDB
-- ASP.NET Core Identity
-- JWT Bearer Authentication
-- FluentValidation
-- LINQ
-- Swagger / OpenAPI
-- Postman
-- Git / GitHub
+* C#
+* .NET 10
+* ASP.NET Core Web API
+* Entity Framework Core
+* SQL Server LocalDB
+* ASP.NET Core Identity
+* JWT Bearer Authentication
+* FluentValidation
+* LINQ
+* xUnit
+* Swagger / OpenAPI
+* Postman
+* Git / GitHub
 
 ---
 
@@ -986,3 +1148,5 @@ After those topics are implemented, I will perform the final project cleanup and
 This project is being developed as an individual backend training project.
 
 My goal is not only to make the endpoints work, but also to understand how the main parts of an ASP.NET Core backend application work together, from receiving an HTTP request to validating it, authenticating the user, accessing the database, and returning the correct response.
+
+As the project continues, I am also starting to add automated testing so that individual parts of the application can be verified directly instead of relying only on manual API testing.
