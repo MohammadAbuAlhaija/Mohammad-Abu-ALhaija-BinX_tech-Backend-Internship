@@ -109,6 +109,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseMiddleware<CardiacPatientMonitoringSystem.Middleware.GlobalExceptionMiddleware>();
 app.UseMiddleware<CardiacPatientMonitoringSystem.Middleware.RequestLoggingMiddleware>();
 
 // Authentication & Authorization

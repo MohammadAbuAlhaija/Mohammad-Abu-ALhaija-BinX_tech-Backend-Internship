@@ -1,0 +1,79 @@
+{
+  "info": {
+    "_postman_id": "c4e67fee-7bc8-487c-8fac-85eef1567a6d",
+    "name": "Week 5 Day 4 - Global Exception Handling",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "56986320",
+    "_collection_link": "https://go.postman.co/collection/56986320-c4e67fee-7bc8-487c-8fac-85eef1567a6d?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Test Global Exception Handler",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{json_web_token_14j2}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5075/api/patients/test-error",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5075",
+          "path": [
+            "api",
+            "patients",
+            "test-error"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login - Get JWT Token",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5075/api/auth/login?email=mohammad@example.com&password=Test123!",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5075",
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ],
+          "query": [
+            {
+              "key": "email",
+              "value": "mohammad@example.com"
+            },
+            {
+              "key": "password",
+              "value": "Test123!"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "json_web_token_14j2",
+      "secret": true
+    }
+  ]
+}

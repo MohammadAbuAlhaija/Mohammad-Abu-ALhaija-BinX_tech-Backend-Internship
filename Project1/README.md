@@ -13,7 +13,7 @@ The system currently manages four main resources:
 - Medications
 - Appointments
 
-I built the project step by step, starting with the project structure and data models, then connecting the API to SQL Server using Entity Framework Core. After that, I implemented the CRUD operations, authentication and authorization, input validation, middleware, seed data, filtering, Swagger documentation, Postman testing, and automated testing using xUnit, Moq, and WebApplicationFactory for both unit and integration testing.
+I built the project step by step, starting with the project structure and data models, then connecting the API to SQL Server using Entity Framework Core. After that, I implemented the CRUD operations, authentication and authorization, input validation, middleware, seed data, filtering, Swagger documentation, Postman testing, automated testing using xUnit, Moq, and WebApplicationFactory, and centralized exception handling using ProblemDetails and structured logging.
 
 The project uses only synthetic test data and does not contain real patient information.
 
@@ -59,6 +59,9 @@ During the project, I worked with:
 - HttpClient Testing
 - EF Core In-Memory Database
 - Testing Protected Endpoints with JWT
+- Global Exception Handling
+- ProblemDetails
+- Structured Logging with ILogger
 
 The most useful part for me was seeing how these concepts work together in one project.
 
@@ -120,7 +123,7 @@ Contains the EF Core migrations used to create and update the database schema.
 Contains the FluentValidation rules for the Create and Update request DTOs.
 
 **Middleware/**  
-Contains the custom request logging middleware.
+Contains the custom request logging middleware and the global exception-handling middleware. The exception middleware catches unexpected errors, logs their details on the server, and returns a safe standardized `ProblemDetails` response to the client.
 
 **Repositories/**  
 Contains repository interfaces used to separate service logic from its dependencies. I added `IPatientRepository` while practicing dependency isolation and mocking with Moq.
@@ -593,6 +596,7 @@ Some of the main responses I tested are:
 | `400 Bad Request` | Invalid input | FluentValidation failure |
 | `401 Unauthorized` | Authentication required | Missing JWT |
 | `404 Not Found` | Resource does not exist | Invalid patient ID |
+| `500 Internal Server Error` | Unexpected server error | Global exception handler |
 
 ---
 
@@ -654,6 +658,180 @@ Response Status: 200
 ```
 
 This helped me understand that middleware sits in the request pipeline and can execute logic before and after the next component handles the request.
+
+---
+
+# Global Exception Handling
+
+After working with the ASP.NET Core middleware pipeline, I added centralized exception handling to the project.
+
+Instead of handling unexpected exceptions separately inside different endpoints, I created:
+
+```text
+GlobalExceptionMiddleware.cs
+```
+
+The middleware wraps the remaining request pipeline in a `try/catch`.
+
+```csharp
+try
+{
+    await _next(context);
+}
+catch (Exception ex)
+{
+    // Log the exception and return a safe response
+}
+```
+
+If an unhandled exception occurs anywhere later in the request pipeline, the middleware catches it and handles it in one central place.
+
+The middleware is registered early in the pipeline:
+
+```csharp
+app.UseMiddleware<CardiacPatientMonitoringSystem.Middleware.GlobalExceptionMiddleware>();
+
+app.UseMiddleware<CardiacPatientMonitoringSystem.Middleware.RequestLoggingMiddleware>();
+```
+
+This allows unexpected exceptions from later components to reach the global handler.
+
+---
+
+## ProblemDetails Response
+
+For unexpected server errors, I used ASP.NET Core's `ProblemDetails` format.
+
+Instead of sending the real exception information to the client, the API returns a safe response similar to:
+
+```json
+{
+  "title": "An unexpected error occurred.",
+  "status": 500,
+  "instance": "/api/patients/test-error"
+}
+```
+
+The response uses:
+
+```text
+500 Internal Server Error
+```
+
+and:
+
+```text
+application/problem+json
+```
+
+The actual exception message and stack trace are not included in the client response.
+
+This keeps unexpected error responses consistent while avoiding exposure of internal application details.
+
+---
+
+## Structured Exception Logging
+
+Although the client receives a safe error response, the real exception still needs to be available for debugging.
+
+For this reason, I used `ILogger` inside the global exception middleware.
+
+```csharp
+_logger.LogError(
+    ex,
+    "Unhandled exception occurred for request {Method} {Path}",
+    context.Request.Method,
+    context.Request.Path
+);
+```
+
+The log includes the HTTP method and request path as structured values.
+
+For example:
+
+```text
+Unhandled exception occurred for request GET /api/patients/test-error
+```
+
+The server log also contains the real exception and stack trace.
+
+This separates the information used for debugging from the information that is safe to return to an API client.
+
+---
+
+## Testing the Global Exception Handler
+
+To verify the middleware, I temporarily created a test endpoint that deliberately throws an exception.
+
+```csharp
+[HttpGet("test-error")]
+public IActionResult TestError()
+{
+    throw new Exception("This is a test exception.");
+}
+```
+
+I then sent an authenticated request to:
+
+```http
+GET /api/patients/test-error
+```
+
+The API returned:
+
+```text
+500 Internal Server Error
+```
+
+with a safe `ProblemDetails` response.
+
+The client did not receive:
+
+```text
+This is a test exception.
+```
+
+and did not receive the exception stack trace.
+
+At the same time, the terminal showed the complete exception information through `ILogger`.
+
+After confirming that the global handler worked correctly, I removed the temporary test endpoint from the project.
+
+### Global Exception Response
+
+![Global Exception Response](./screenshots/global-exception-500.png)
+
+### Server Exception Log
+
+![Global Exception Log](./screenshots/global-exception-log.png)
+
+---
+
+## Checking Redundant try/catch Blocks
+
+After adding centralized exception handling, I checked the application for existing `try/catch` blocks.
+
+There were no redundant `try/catch` blocks inside the API controllers that needed to be removed.
+
+The global middleware now provides one central place for handling unexpected exceptions that reach the HTTP request pipeline.
+
+---
+
+## Final Verification
+
+After completing the exception-handling changes, I rebuilt the API and ran the complete automated test project.
+
+The result was:
+
+```text
+Build succeeded
+
+Total tests: 10
+Passed: 10
+Failed: 0
+```
+
+This confirmed that the new global exception handler did not break the existing unit, Moq, or integration tests.
 
 ---
 
@@ -1184,9 +1362,9 @@ Swagger was useful for seeing the API as one complete system instead of testing 
 
 # Postman Testing
 
-I also created a Postman collection for testing the API.
+I also created Postman collections for testing the API.
 
-The collection contains requests for:
+The main project collection contains requests for authentication and the four main resources.
 
 ### Authentication
 
@@ -1230,11 +1408,13 @@ The collection contains requests for:
 - Delete
 - Filter by status
 
-The exported Postman collection is available at:
+The exported main Postman collection is available at:
 
 ```text
 Postman/Cardiac Patient Monitoring System.postman_collection.json
 ```
+
+I also used a separate Day 4 collection while testing the global exception handler.
 
 Using Postman throughout development helped me test each feature immediately after implementing it instead of waiting until the whole project was finished.
 
@@ -1324,6 +1504,14 @@ The unit tests execute application logic directly, while the integration tests u
 
 The integration tests also use an isolated EF Core In-Memory database instead of the normal SQL Server development database.
 
+The current result is:
+
+```text
+Total tests: 10
+Passed: 10
+Failed: 0
+```
+
 ---
 
 # Database Configuration
@@ -1361,7 +1549,9 @@ A normal authenticated request in the project follows a flow similar to:
 ```text
 Client / Postman / Swagger
           ↓
-ASP.NET Core Middleware
+Global Exception Middleware
+          ↓
+Request Logging Middleware
           ↓
 JWT Authentication
           ↓
@@ -1377,6 +1567,8 @@ SQL Server
           ↓
 HTTP Response
 ```
+
+If an unexpected exception occurs later in the request pipeline, it can bubble back to the Global Exception Middleware, where it is logged and converted into a safe `ProblemDetails` response.
 
 Building the project this way helped me see how the individual topics from the training connect together inside a real backend application.
 
@@ -1532,6 +1724,18 @@ The following screenshots were captured while implementing and testing the proje
 
 ---
 
+## Global Exception Handling
+
+### Safe 500 ProblemDetails Response
+
+![Global Exception Response](./screenshots/global-exception-500.png)
+
+### Structured Server Log
+
+![Global Exception Log](./screenshots/global-exception-log.png)
+
+---
+
 ## Swagger
 
 ### API Documentation
@@ -1578,6 +1782,13 @@ I became more comfortable with:
 - Keeping integration test data isolated from the development database.
 - Testing protected API endpoints using a valid JWT.
 - Troubleshooting dependency injection and database provider conflicts during integration testing.
+- Understanding the problems caused by scattered exception handling.
+- Handling unexpected exceptions centrally using middleware.
+- Returning standardized error responses using `ProblemDetails`.
+- Avoiding exposure of exception messages and stack traces to API clients.
+- Logging complete exception details on the server using `ILogger`.
+- Using structured logging values such as HTTP method and request path.
+- Understanding the difference between expected API errors such as `404` and unexpected server errors such as `500`.
 - Keeping testing evidence while developing instead of only testing at the end.
 
 I also became more comfortable reading the complete request flow and understanding which part of the application is responsible for each operation.
@@ -1588,11 +1799,13 @@ Using Moq extended this idea by allowing me to test a service even when it depen
 
 Integration testing added another level by allowing me to send HTTP requests through the real ASP.NET Core pipeline and verify routing, authentication, controllers, and database access together.
 
+Adding global exception handling also helped me understand how middleware can be used for application-wide concerns. Instead of repeating unexpected error handling in individual endpoints, the API can now handle these failures consistently in one place while keeping detailed debugging information on the server.
+
 ---
 
 # Current Project Status
 
-At the current stage, I have completed the main API structure, database integration, CRUD modules, authentication, validation, middleware, filtering, seed data, Swagger documentation, Postman verification, automated unit testing with xUnit and Moq, and API integration testing using WebApplicationFactory.
+At the current stage, I have completed the main API structure, database integration, CRUD modules, authentication, validation, middleware, filtering, seed data, Swagger documentation, Postman verification, automated unit testing with xUnit and Moq, API integration testing using WebApplicationFactory, and centralized exception handling.
 
 The current xUnit tests cover the `CalculateAge()` method using `[Fact]` and `[Theory]`.
 
@@ -1613,6 +1826,17 @@ The integration tests currently cover:
 - Using an isolated EF Core In-Memory test database.
 - Accessing a protected endpoint using a valid test JWT.
 
+The project now also includes centralized handling for unexpected exceptions.
+
+The global exception handler:
+
+- Catches unhandled exceptions from the request pipeline.
+- Logs the real exception using `ILogger`.
+- Includes useful context such as the HTTP method and request path.
+- Returns `500 Internal Server Error`.
+- Uses a standardized `ProblemDetails` response.
+- Does not expose the real exception message or stack trace to the client.
+
 The complete automated test project currently contains:
 
 ```text
@@ -1621,12 +1845,9 @@ Passed: 10
 Failed: 0
 ```
 
-The remaining training-aligned work will be completed after covering the corresponding topics:
+After implementing the global exception handler, I rebuilt the project and ran the complete test suite successfully.
 
-- Centralized error handling
-- Additional automated testing as the project continues
-
-After the remaining topics are implemented, I will perform the final project cleanup and update the documentation and test instructions accordingly.
+The remaining training-aligned work will be added as the next topics are covered. After completing the remaining requirements, I will perform the final project cleanup and documentation review.
 
 ---
 
@@ -1646,6 +1867,8 @@ After the remaining topics are implemented, I will perform the final project cle
 - Moq
 - Microsoft.AspNetCore.Mvc.Testing
 - WebApplicationFactory
+- ASP.NET Core ProblemDetails
+- ILogger
 - Swagger / OpenAPI
 - Postman
 - Git / GitHub
@@ -1667,3 +1890,5 @@ Using Moq helped me isolate services from their dependencies.
 Using WebApplicationFactory helped me move one step further and test the API through real HTTP requests inside an isolated test environment.
 
 Together, these testing approaches helped me understand the difference between testing one piece of code in isolation and testing multiple parts of the backend application working together.
+
+Adding centralized exception handling also improved the reliability of the API. Unexpected errors are now handled consistently, detailed information is logged on the server, and clients receive a safe standardized response without internal exception details.
