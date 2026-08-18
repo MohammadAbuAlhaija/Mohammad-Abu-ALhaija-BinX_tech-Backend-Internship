@@ -13,7 +13,7 @@ The system currently manages four main resources:
 - Medications
 - Appointments
 
-I built the project step by step, starting with the project structure and data models, then connecting the API to SQL Server using Entity Framework Core. After that, I implemented the CRUD operations, authentication and authorization, input validation, middleware, seed data, filtering, Swagger documentation, Postman testing, and automated unit testing using xUnit and Moq.
+I built the project step by step, starting with the project structure and data models, then connecting the API to SQL Server using Entity Framework Core. After that, I implemented the CRUD operations, authentication and authorization, input validation, middleware, seed data, filtering, Swagger documentation, Postman testing, and automated testing using xUnit, Moq, and WebApplicationFactory for both unit and integration testing.
 
 The project uses only synthetic test data and does not contain real patient information.
 
@@ -54,8 +54,15 @@ During the project, I worked with:
 - Mocking Dependencies
 - Repository Interfaces
 - Mock Verification
+- Integration Testing
+- WebApplicationFactory
+- HttpClient Testing
+- EF Core In-Memory Database
+- Testing Protected Endpoints with JWT
 
-The most useful part for me was seeing how these concepts work together in one project. I was also able to start testing individual pieces of application logic separately using unit tests instead of depending only on API testing through Postman.
+The most useful part for me was seeing how these concepts work together in one project.
+
+I was also able to move from testing APIs manually using Postman and Swagger to writing automated tests at different levels. Unit tests allowed me to test small pieces of application logic directly, while integration tests allowed me to verify multiple parts of the API working together.
 
 ---
 
@@ -80,7 +87,9 @@ Project1/
 │   └── appsettings.json
 │
 ├── CardiacPatientMonitoringSystem.Tests/
-│   └── PatientServiceTests.cs
+│   ├── PatientServiceTests.cs
+│   ├── PatientsApiTests.cs
+│   └── CustomWebApplicationFactory.cs
 │
 ├── Postman/
 │   └── Cardiac Patient Monitoring System.postman_collection.json
@@ -120,7 +129,9 @@ Contains repository interfaces used to separate service logic from its dependenc
 Contains simple application logic that can be separated from the controllers. `PatientService` currently contains the patient age calculation and a method that retrieves a patient's name through `IPatientRepository`.
 
 **CardiacPatientMonitoringSystem.Tests/**  
-Contains the automated unit tests written using xUnit and Moq. The test project references the main API project so application logic can be tested independently.
+Contains the automated unit and integration tests written using xUnit, Moq, and WebApplicationFactory.
+
+The test project includes service-level unit tests, mocked dependency tests, and HTTP integration tests against the API.
 
 ---
 
@@ -900,6 +911,255 @@ Using Moq helped me understand how a service can be tested independently from a 
 
 ---
 
+# Integration Testing with WebApplicationFactory
+
+After unit testing individual methods and services, I continued by adding integration testing using `WebApplicationFactory`.
+
+The goal was to test the API through real HTTP requests while still running everything inside a test environment.
+
+Unlike the previous unit tests, these tests verify multiple parts of the application working together, including routing, JWT authentication, controllers, Entity Framework Core, and HTTP responses.
+
+---
+
+## Setting Up WebApplicationFactory
+
+I added the ASP.NET Core integration testing package:
+
+```bash
+dotnet add CardiacPatientMonitoringSystem.Tests/CardiacPatientMonitoringSystem.Tests.csproj package Microsoft.AspNetCore.Mvc.Testing
+```
+
+Because the application uses top-level statements in `Program.cs`, I exposed the generated `Program` class for the test project.
+
+At the end of `Program.cs`, I added:
+
+```csharp
+public partial class Program { }
+```
+
+This allows the test project to use:
+
+```csharp
+WebApplicationFactory<Program>
+```
+
+and start the API inside the test environment without manually running the application.
+
+---
+
+## Using a Separate Test Database
+
+I did not want the integration tests to use the real SQL Server development database.
+
+For this reason, I added the EF Core In-Memory provider:
+
+```bash
+dotnet add CardiacPatientMonitoringSystem.Tests/CardiacPatientMonitoringSystem.Tests.csproj package Microsoft.EntityFrameworkCore.InMemory
+```
+
+I then created:
+
+```text
+CustomWebApplicationFactory.cs
+```
+
+The custom factory replaces the normal SQL Server configuration with an isolated EF Core In-Memory database while integration tests are running.
+
+```csharp
+services.AddDbContext<AppDbContext>(options =>
+{
+    options.UseInMemoryDatabase(
+        "CardiacPatientMonitoringTestDb"
+    );
+});
+```
+
+The test database is recreated before the integration tests run:
+
+```csharp
+context.Database.EnsureDeleted();
+context.Database.EnsureCreated();
+```
+
+This keeps test data isolated from the normal development database.
+
+During the setup, I initially encountered a database provider conflict because both SQL Server and the In-Memory provider were registered in the test environment.
+
+The error indicated that:
+
+```text
+Microsoft.EntityFrameworkCore.SqlServer
+```
+
+and:
+
+```text
+Microsoft.EntityFrameworkCore.InMemory
+```
+
+were both registered.
+
+I fixed the problem by removing the existing `AppDbContext` database configuration inside `ConfigureTestServices()` before registering the In-Memory provider.
+
+This helped me better understand how dependency injection configuration can be replaced specifically for integration testing.
+
+---
+
+## Get Patient Integration Test
+
+I created:
+
+```text
+PatientsApiTests.cs
+```
+
+The test class uses an `HttpClient` created by `CustomWebApplicationFactory`.
+
+The first integration test covers the successful Get-by-ID path:
+
+```http
+GET /api/patients/1001
+```
+
+The expected response is:
+
+```text
+200 OK
+```
+
+The response is deserialized into a `Patient` object:
+
+```csharp
+var patient =
+    await response.Content.ReadFromJsonAsync<Patient>();
+```
+
+I then verify the returned patient information:
+
+```csharp
+Assert.Equal(1001, patient.Id);
+Assert.Equal("Ahmad Khalil", patient.FullName);
+Assert.Equal(new DateTime(1985, 6, 15), patient.DateOfBirth);
+Assert.Equal("Male", patient.Gender);
+Assert.Equal("0599123456", patient.PhoneNumber);
+Assert.Equal("Jenin", patient.Address);
+```
+
+This verifies that the API returns the expected patient data from the test database.
+
+---
+
+## Testing the Not Found Path
+
+I also added an integration test for a patient ID that does not exist:
+
+```http
+GET /api/patients/99999
+```
+
+The expected response is:
+
+```text
+404 Not Found
+```
+
+The test verifies the status code using:
+
+```csharp
+Assert.Equal(
+    HttpStatusCode.NotFound,
+    response.StatusCode
+);
+```
+
+This confirms that the same API endpoint correctly handles both successful and not-found scenarios when tested through HTTP.
+
+---
+
+## Testing a Protected Endpoint with JWT
+
+The `PatientsController` is protected using:
+
+```csharp
+[Authorize]
+```
+
+Because of this, the integration test needs a valid JWT before it can access the endpoint.
+
+I created a test JWT using the same issuer, audience, signing key, and signing algorithm expected by the API.
+
+The token is attached to the request using:
+
+```csharp
+_client.DefaultRequestHeaders.Authorization =
+    new AuthenticationHeaderValue(
+        "Bearer",
+        token
+    );
+```
+
+The request then passes through the real JWT authentication middleware before reaching the controller.
+
+This allows the integration test to verify an authenticated and protected endpoint while still running entirely inside the test environment.
+
+---
+
+## Integration Test Flow
+
+The integration tests follow a flow similar to:
+
+```text
+xUnit Integration Test
+        ↓
+HttpClient
+        ↓
+ASP.NET Core Pipeline
+        ↓
+JWT Authentication
+        ↓
+Routing
+        ↓
+PatientsController
+        ↓
+AppDbContext
+        ↓
+In-Memory Test Database
+        ↓
+HTTP Response
+        ↓
+Assertions
+```
+
+This is different from the unit tests because multiple parts of the application are being tested together.
+
+---
+
+## Integration Test Results
+
+I ran the complete test project using:
+
+```bash
+dotnet test CardiacPatientMonitoringSystem.Tests/CardiacPatientMonitoringSystem.Tests.csproj
+```
+
+The final result was:
+
+```text
+Total tests: 10
+Passed: 10
+Failed: 0
+```
+
+This includes the existing xUnit tests, the Moq tests, and the new integration tests.
+
+### Integration Tests Passed
+
+![Integration Tests Passed](./screenshots/integration-tests-passed.png)
+
+Adding integration tests helped me understand how automated testing can verify the API from a client's point of view without manually running Swagger or Postman.
+
+---
+
 # Swagger / OpenAPI
 
 I configured Swagger so the API can be explored and tested without needing a separate frontend application.
@@ -1046,19 +1306,23 @@ http://localhost:5075/swagger
 
 ---
 
-# Running the Unit Tests
+# Running the Automated Tests
 
-The xUnit test project can be run separately from the API.
+The automated test project can be run separately from the API.
 
 From the `Project1` directory:
 
 ```bash
-dotnet test CardiacPatientMonitoringSystem.Tests
+dotnet test CardiacPatientMonitoringSystem.Tests/CardiacPatientMonitoringSystem.Tests.csproj
 ```
 
-This builds both the main project and the test project and then runs the available automated tests.
+This builds both the main API project and the test project and then runs the available automated tests.
 
-The API does not need to be running in Swagger or Postman for the current unit tests because the dependencies needed by `PatientService` can be replaced with mocks during testing.
+The API does not need to be started manually in Swagger or Postman before running the tests.
+
+The unit tests execute application logic directly, while the integration tests use `WebApplicationFactory` to start the API inside the test environment and send HTTP requests through an in-memory `HttpClient`.
+
+The integration tests also use an isolated EF Core In-Memory database instead of the normal SQL Server development database.
 
 ---
 
@@ -1077,6 +1341,16 @@ CardiacPatientMonitoringDb
 ```
 
 Entity Framework Core uses the `DefaultConnection` connection string from the application configuration.
+
+The integration test environment does not use this database.
+
+Instead, it replaces the SQL Server configuration with:
+
+```text
+CardiacPatientMonitoringTestDb
+```
+
+using the EF Core In-Memory provider.
 
 ---
 
@@ -1106,7 +1380,7 @@ HTTP Response
 
 Building the project this way helped me see how the individual topics from the training connect together inside a real backend application.
 
-The current unit tests follow a different path because they test application logic directly:
+The unit tests that use Moq follow a smaller path:
 
 ```text
 xUnit Test
@@ -1119,6 +1393,30 @@ Controlled Result
     ↓
 Assert / Verify
 ```
+
+The integration tests use a wider application flow:
+
+```text
+Integration Test
+      ↓
+HttpClient
+      ↓
+ASP.NET Core Pipeline
+      ↓
+JWT Authentication
+      ↓
+Controller
+      ↓
+Entity Framework Core
+      ↓
+In-Memory Test Database
+      ↓
+HTTP Response
+      ↓
+Assertions
+```
+
+This helped me understand that different types of tests verify the application at different levels.
 
 ---
 
@@ -1218,7 +1516,7 @@ The following screenshots were captured while implementing and testing the proje
 
 ---
 
-## Unit Testing
+## Automated Testing
 
 ### xUnit Tests
 
@@ -1227,6 +1525,10 @@ The following screenshots were captured while implementing and testing the proje
 ### Moq Tests
 
 ![Moq Tests Passed](./screenshots/moq-tests-passed.png)
+
+### Integration Tests
+
+![Integration Tests Passed](./screenshots/integration-tests-passed.png)
 
 ---
 
@@ -1269,6 +1571,13 @@ I became more comfortable with:
 - Configuring mock return values using `Setup()` and `ReturnsAsync()`.
 - Simulating dependency failures using `ThrowsAsync()`.
 - Using `Verify()` and `Times.Once` to check dependency interactions.
+- Understanding the difference between unit tests and integration tests.
+- Using `WebApplicationFactory` to run the API inside the test environment.
+- Sending HTTP requests from integration tests using `HttpClient`.
+- Replacing SQL Server with an EF Core In-Memory database during integration testing.
+- Keeping integration test data isolated from the development database.
+- Testing protected API endpoints using a valid JWT.
+- Troubleshooting dependency injection and database provider conflicts during integration testing.
 - Keeping testing evidence while developing instead of only testing at the end.
 
 I also became more comfortable reading the complete request flow and understanding which part of the application is responsible for each operation.
@@ -1277,20 +1586,40 @@ The introduction to unit testing helped me understand that not every test needs 
 
 Using Moq extended this idea by allowing me to test a service even when it depends on another component, without using the real dependency during the test.
 
+Integration testing added another level by allowing me to send HTTP requests through the real ASP.NET Core pipeline and verify routing, authentication, controllers, and database access together.
+
 ---
 
 # Current Project Status
 
-At the current stage, I have completed the main API structure, database integration, CRUD modules, authentication, validation, middleware, filtering, seed data, Swagger documentation, Postman verification, and automated unit testing with xUnit and Moq.
+At the current stage, I have completed the main API structure, database integration, CRUD modules, authentication, validation, middleware, filtering, seed data, Swagger documentation, Postman verification, automated unit testing with xUnit and Moq, and API integration testing using WebApplicationFactory.
 
 The current xUnit tests cover the `CalculateAge()` method using `[Fact]` and `[Theory]`.
 
-The Moq tests cover a service method that depends on `IPatientRepository`. They include:
+The Moq tests cover a service method that depends on `IPatientRepository`.
+
+They include:
 
 - Returning controlled repository data.
 - Testing how the service processes the returned data.
 - Simulating a repository exception.
 - Verifying that a repository method is called exactly once.
+
+The integration tests currently cover:
+
+- A successful `GET /api/patients/1001` request.
+- Verifying the full returned patient response.
+- A `404 Not Found` request for a missing patient.
+- Using an isolated EF Core In-Memory test database.
+- Accessing a protected endpoint using a valid test JWT.
+
+The complete automated test project currently contains:
+
+```text
+Total tests: 10
+Passed: 10
+Failed: 0
+```
 
 The remaining training-aligned work will be completed after covering the corresponding topics:
 
@@ -1308,12 +1637,15 @@ After the remaining topics are implemented, I will perform the final project cle
 - ASP.NET Core Web API
 - Entity Framework Core
 - SQL Server LocalDB
+- EF Core In-Memory
 - ASP.NET Core Identity
 - JWT Bearer Authentication
 - FluentValidation
 - LINQ
 - xUnit
 - Moq
+- Microsoft.AspNetCore.Mvc.Testing
+- WebApplicationFactory
 - Swagger / OpenAPI
 - Postman
 - Git / GitHub
@@ -1326,4 +1658,12 @@ This project is being developed as an individual backend training project.
 
 My goal is not only to make the endpoints work, but also to understand how the main parts of an ASP.NET Core backend application work together, from receiving an HTTP request to validating it, authenticating the user, accessing the database, and returning the correct response.
 
-As the project continues, I am also building automated tests to verify individual parts of the application. Using xUnit and Moq has helped me understand how application logic can be tested independently from HTTP requests, databases, and other dependencies.
+As the project continues, I am also building automated tests at different levels.
+
+Using xUnit helped me understand how application logic can be tested directly.
+
+Using Moq helped me isolate services from their dependencies.
+
+Using WebApplicationFactory helped me move one step further and test the API through real HTTP requests inside an isolated test environment.
+
+Together, these testing approaches helped me understand the difference between testing one piece of code in isolation and testing multiple parts of the backend application working together.
