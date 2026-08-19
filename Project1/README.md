@@ -15,6 +15,8 @@ The system currently manages four main resources:
 
 I built the project step by step, starting with the project structure and data models, then connecting the API to SQL Server using Entity Framework Core. After that, I implemented the CRUD operations, authentication and authorization, input validation, middleware, seed data, filtering, Swagger documentation, Postman testing, automated testing using xUnit, Moq, and WebApplicationFactory, and centralized exception handling using ProblemDetails and structured logging.
 
+During Week 5, I expanded the automated testing setup by prioritizing important and higher-risk logic, adding validation unit tests, and running the complete test suite together.
+
 The project uses only synthetic test data and does not contain real patient information.
 
 ---
@@ -59,6 +61,8 @@ During the project, I worked with:
 - HttpClient Testing
 - EF Core In-Memory Database
 - Testing Protected Endpoints with JWT
+- Validation Unit Testing
+- Risk-Based Test Prioritization
 - Global Exception Handling
 - ProblemDetails
 - Structured Logging with ILogger
@@ -91,6 +95,7 @@ Project1/
 │
 ├── CardiacPatientMonitoringSystem.Tests/
 │   ├── PatientServiceTests.cs
+│   ├── CreatePatientValidatorTests.cs
 │   ├── PatientsApiTests.cs
 │   └── CustomWebApplicationFactory.cs
 │
@@ -132,9 +137,9 @@ Contains repository interfaces used to separate service logic from its dependenc
 Contains simple application logic that can be separated from the controllers. `PatientService` currently contains the patient age calculation and a method that retrieves a patient's name through `IPatientRepository`.
 
 **CardiacPatientMonitoringSystem.Tests/**  
-Contains the automated unit and integration tests written using xUnit, Moq, and WebApplicationFactory.
+Contains the automated unit and integration tests written using xUnit, Moq, FluentValidation, and WebApplicationFactory.
 
-The test project includes service-level unit tests, mocked dependency tests, and HTTP integration tests against the API.
+The test project includes service-level unit tests, mocked dependency tests, validation tests, and HTTP integration tests against the API.
 
 ---
 
@@ -401,8 +406,6 @@ if (!string.IsNullOrWhiteSpace(status))
 var appointments = await query.ToListAsync();
 ```
 
-This was useful because it showed me how LINQ expressions can become database queries when working with Entity Framework Core.
-
 ### Filter Appointments by Status
 
 ![Filter Appointments](./screenshots/appointments-filter-by-status.png)
@@ -422,8 +425,6 @@ POST /api/auth/register
 POST /api/auth/login
 ```
 
-For the current training implementation, the register and login endpoints accept `email` and `password` parameters.
-
 ### Register User
 
 ![Register User](./screenshots/auth-register.png)
@@ -433,8 +434,6 @@ For the current training implementation, the register and login endpoints accept
 # JWT Authentication
 
 After a successful login, the API generates a **JSON Web Token (JWT)**.
-
-The token contains claims identifying the user and has a limited expiration time.
 
 The JWT is signed using:
 
@@ -449,19 +448,9 @@ The API validates:
 - Token lifetime
 - Signing key
 
-A successful login returns a token that can then be sent with protected API requests.
-
 ### Login and JWT Generation
 
 ![Login JWT](./screenshots/auth-login-jwt.png)
-
-Working with JWT helped me understand the difference between:
-
-**Authentication** — determining who the user is.
-
-and
-
-**Authorization** — deciding whether the request can access a protected endpoint.
 
 ---
 
@@ -480,33 +469,23 @@ This includes:
 - Medications
 - Appointments
 
-The authentication endpoints remain available without a JWT because users need to register and login before they have a token.
-
-If I try to access a protected endpoint without a token, the API rejects the request.
-
 ### Request Without JWT
 
 ![Unauthorized Request](./screenshots/auth-protected-401.png)
-
-The response is:
 
 ```text
 401 Unauthorized
 ```
 
-After sending a valid JWT using Bearer authentication, the same protected endpoint can be accessed successfully.
-
 ### Request With JWT
 
 ![Authorized Request](./screenshots/auth-protected-200.png)
-
-This returns:
 
 ```text
 200 OK
 ```
 
-This part helped me understand the complete authentication flow:
+The authentication flow is:
 
 ```text
 Register
@@ -535,16 +514,7 @@ I created validators for both Create and Update DTOs for:
 - Medication
 - Appointment
 
-For example, the Patient validator checks that:
-
-- Full name is provided
-- Date of birth is provided
-- Date of birth is in the past
-- Gender is provided
-- Phone number is provided
-- Address is provided
-
-Example:
+For example:
 
 ```csharp
 RuleFor(x => x.FullName)
@@ -564,11 +534,7 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<CreatePatientValidator>();
 ```
 
-One thing I found useful here is that validation happens before the controller performs the database operation, which keeps the controller cleaner.
-
 ### Validation Error
-
-I tested an invalid Patient request in Postman.
 
 ![Patient Validation Error](./screenshots/validation-patient-400.png)
 
@@ -578,15 +544,9 @@ The API correctly returns:
 400 Bad Request
 ```
 
-with clear validation errors.
-
 ---
 
 # HTTP Status Codes
-
-While testing the API, I made sure that the endpoints return HTTP status codes that match the result of the request.
-
-Some of the main responses I tested are:
 
 | Status Code | Meaning | Example |
 | --- | --- | --- |
@@ -602,15 +562,13 @@ Some of the main responses I tested are:
 
 # 404 Not Found Handling
 
-I also tested what happens when a client requests a resource that does not exist.
-
 Example:
 
 ```http
 GET /api/patients/99999
 ```
 
-Instead of returning an incorrect success response, the controller returns:
+returns:
 
 ```text
 404 Not Found
@@ -619,8 +577,6 @@ Instead of returning an incorrect success response, the controller returns:
 ### Patient Not Found
 
 ![Patient Not Found](./screenshots/patient-not-found-404.png)
-
-This helped me practice handling expected API failure scenarios and returning a status code that clearly describes the result.
 
 ---
 
@@ -642,7 +598,7 @@ It then calls the next component:
 await _next(context);
 ```
 
-After the request finishes, it logs the response status code:
+After the request finishes:
 
 ```csharp
 Console.WriteLine(
@@ -650,28 +606,24 @@ Console.WriteLine(
 );
 ```
 
-For example:
+Example:
 
 ```text
 Request: GET /api/patients
 Response Status: 200
 ```
 
-This helped me understand that middleware sits in the request pipeline and can execute logic before and after the next component handles the request.
-
 ---
 
 # Global Exception Handling
 
-After working with the ASP.NET Core middleware pipeline, I added centralized exception handling to the project.
-
-Instead of handling unexpected exceptions separately inside different endpoints, I created:
+I added centralized exception handling to the project using:
 
 ```text
 GlobalExceptionMiddleware.cs
 ```
 
-The middleware wraps the remaining request pipeline in a `try/catch`.
+The middleware wraps the remaining request pipeline:
 
 ```csharp
 try
@@ -684,25 +636,13 @@ catch (Exception ex)
 }
 ```
 
-If an unhandled exception occurs anywhere later in the request pipeline, the middleware catches it and handles it in one central place.
-
-The middleware is registered early in the pipeline:
-
-```csharp
-app.UseMiddleware<CardiacPatientMonitoringSystem.Middleware.GlobalExceptionMiddleware>();
-
-app.UseMiddleware<CardiacPatientMonitoringSystem.Middleware.RequestLoggingMiddleware>();
-```
-
-This allows unexpected exceptions from later components to reach the global handler.
+This provides one central place for handling unexpected exceptions.
 
 ---
 
 ## ProblemDetails Response
 
-For unexpected server errors, I used ASP.NET Core's `ProblemDetails` format.
-
-Instead of sending the real exception information to the client, the API returns a safe response similar to:
+For unexpected errors, the API returns a standardized response:
 
 ```json
 {
@@ -716,25 +656,16 @@ The response uses:
 
 ```text
 500 Internal Server Error
-```
-
-and:
-
-```text
 application/problem+json
 ```
 
-The actual exception message and stack trace are not included in the client response.
-
-This keeps unexpected error responses consistent while avoiding exposure of internal application details.
+The actual exception message and stack trace are not exposed to the client.
 
 ---
 
 ## Structured Exception Logging
 
-Although the client receives a safe error response, the real exception still needs to be available for debugging.
-
-For this reason, I used `ILogger` inside the global exception middleware.
+The real exception is logged on the server using `ILogger`.
 
 ```csharp
 _logger.LogError(
@@ -745,57 +676,7 @@ _logger.LogError(
 );
 ```
 
-The log includes the HTTP method and request path as structured values.
-
-For example:
-
-```text
-Unhandled exception occurred for request GET /api/patients/test-error
-```
-
-The server log also contains the real exception and stack trace.
-
-This separates the information used for debugging from the information that is safe to return to an API client.
-
----
-
-## Testing the Global Exception Handler
-
-To verify the middleware, I temporarily created a test endpoint that deliberately throws an exception.
-
-```csharp
-[HttpGet("test-error")]
-public IActionResult TestError()
-{
-    throw new Exception("This is a test exception.");
-}
-```
-
-I then sent an authenticated request to:
-
-```http
-GET /api/patients/test-error
-```
-
-The API returned:
-
-```text
-500 Internal Server Error
-```
-
-with a safe `ProblemDetails` response.
-
-The client did not receive:
-
-```text
-This is a test exception.
-```
-
-and did not receive the exception stack trace.
-
-At the same time, the terminal showed the complete exception information through `ILogger`.
-
-After confirming that the global handler worked correctly, I removed the temporary test endpoint from the project.
+This keeps debugging information on the server while returning a safe response to the client.
 
 ### Global Exception Response
 
@@ -807,51 +688,15 @@ After confirming that the global handler worked correctly, I removed the tempora
 
 ---
 
-## Checking Redundant try/catch Blocks
-
-After adding centralized exception handling, I checked the application for existing `try/catch` blocks.
-
-There were no redundant `try/catch` blocks inside the API controllers that needed to be removed.
-
-The global middleware now provides one central place for handling unexpected exceptions that reach the HTTP request pipeline.
-
----
-
-## Final Verification
-
-After completing the exception-handling changes, I rebuilt the API and ran the complete automated test project.
-
-The result was:
-
-```text
-Build succeeded
-
-Total tests: 10
-Passed: 10
-Failed: 0
-```
-
-This confirmed that the new global exception handler did not break the existing unit, Moq, or integration tests.
-
----
-
 # Unit Testing with xUnit
 
-As the next step in the project, I started adding automated unit tests using **xUnit**.
-
-I created a separate test project:
+I created a separate xUnit test project:
 
 ```text
 CardiacPatientMonitoringSystem.Tests
 ```
 
-and referenced the main `CardiacPatientMonitoringSystem` project from it.
-
-This keeps the tests separate from the main API while still allowing them to access the application classes that need to be tested.
-
-## PatientService
-
-For the first unit-testing exercise, I added a simple `PatientService` containing a pure method for calculating a patient's age.
+For the first unit-testing exercise, I added a `PatientService` containing a method for calculating a patient's age.
 
 ```csharp
 public int CalculateAge(DateTime dateOfBirth, DateTime referenceDate)
@@ -867,87 +712,47 @@ public int CalculateAge(DateTime dateOfBirth, DateTime referenceDate)
 }
 ```
 
-The method does not depend on the database, HTTP requests, or any external service, which made it suitable for a basic unit test.
+I used a reference date instead of the current system date directly so the tests remain predictable.
 
-I used a reference date as an input instead of using the current system date directly. This keeps the test predictable because the same input will always produce the same expected result.
+I wrote three `[Fact]` tests covering:
 
-## Fact Tests
+- Birthday already passed.
+- Birthday not yet reached.
+- Birthday occurring on the reference date.
 
-I wrote three `[Fact]` tests for `CalculateAge()`.
+I also created a `[Theory]` with three `[InlineData]` cases.
 
-The tests cover:
-
-- A birthday that has already passed during the reference year.
-- A birthday that has not occurred yet.
-- A birthday that occurs on the reference date.
-
-Each test follows the **Arrange-Act-Assert** pattern.
+The tests follow:
 
 ```text
 Arrange
    ↓
-Prepare the service and test data
-
 Act
    ↓
-Call CalculateAge()
-
 Assert
-   ↓
-Verify the returned age
 ```
 
-Using this pattern made each test easier to read because the setup, action, and expected result are clearly separated.
-
-## Theory Test
-
-I also created a `[Theory]` test using `[InlineData]`.
-
-Instead of writing a separate test method for every set of inputs, the same test can run multiple times with different dates and expected ages.
-
-The Theory currently covers three different input cases.
-
-This helped me understand the main difference between the two xUnit test types:
-
-**`[Fact]`** — useful for testing one specific scenario.
-
-**`[Theory]`** — useful for running the same test logic with multiple sets of input data.
-
-## Running the Tests
-
-I can run the test project using:
-
-```bash
-dotnet test CardiacPatientMonitoringSystem.Tests
-```
-
-The first test run contained:
+The first test suite contained:
 
 ```text
-3 Fact test cases
+3 Fact cases
 +
-3 Theory input cases
+3 Theory cases
 =
 6 test cases
 ```
-
-All six test cases passed successfully.
 
 ### xUnit Test Results
 
 ![xUnit Tests Passed](./screenshots/xunit-tests-passed.png)
 
-Adding unit testing showed me a different way of verifying the project. Postman and Swagger are useful for testing the API through HTTP requests, while xUnit allows me to test a small piece of application logic directly without starting the API or connecting to the database.
-
 ---
 
 # Mocking Dependencies with Moq
 
-After starting unit testing with xUnit, I continued improving the test setup by learning how to isolate a service from its dependencies using **Moq**.
+I continued testing by learning how to isolate `PatientService` from its dependency using **Moq**.
 
-The goal was to test `PatientService` without connecting to the real database.
-
-To do this, I added an `IPatientRepository` interface:
+I created:
 
 ```csharp
 public interface IPatientRepository
@@ -956,7 +761,7 @@ public interface IPatientRepository
 }
 ```
 
-I then updated `PatientService` so that it receives the repository through its constructor:
+`PatientService` receives the repository through constructor injection:
 
 ```csharp
 private readonly IPatientRepository _patientRepository;
@@ -967,70 +772,17 @@ public PatientService(IPatientRepository patientRepository)
 }
 ```
 
-This allows the repository dependency to be replaced with a controlled mock during unit testing.
-
-I also added `GetPatientNameAsync()`, which uses the repository to retrieve a patient and return the patient's name.
-
-```csharp
-public async Task<string> GetPatientNameAsync(int id)
-{
-    try
-    {
-        var patient = await _patientRepository.GetByIdAsync(id);
-
-        if (patient == null)
-        {
-            return "Patient not found";
-        }
-
-        return patient.FullName;
-    }
-    catch (Exception)
-    {
-        return "Unable to retrieve patient";
-    }
-}
-```
-
----
-
-## Mocking Repository Return Values
-
-I used Moq to create a mock implementation of `IPatientRepository`.
+Using Moq, I can control what the repository returns:
 
 ```csharp
 var mockRepo = new Mock<IPatientRepository>();
-```
-
-Using `Setup()` and `ReturnsAsync()`, I configured the mock to return a specific patient.
-
-```csharp
-var patient = new Patient
-{
-    Id = 1,
-    FullName = "Ahmad Ali"
-};
 
 mockRepo
     .Setup(r => r.GetByIdAsync(1))
     .ReturnsAsync(patient);
 ```
 
-I then called `GetPatientNameAsync(1)` and checked that the service returned:
-
-```text
-Ahmad Ali
-```
-
-This allowed me to test how the service processes the repository result without accessing SQL Server or Entity Framework Core.
-
----
-
-## Testing Dependency Failures
-
-I also tested what happens when the repository throws an exception.
-
-Using `ThrowsAsync()`, I configured the mock repository to simulate a failure:
+I also simulated a dependency failure:
 
 ```csharp
 mockRepo
@@ -1038,19 +790,7 @@ mockRepo
     .ThrowsAsync(new Exception("Database error"));
 ```
 
-The service handles the exception and returns:
-
-```text
-Unable to retrieve patient
-```
-
-This made it possible to test a failure scenario without intentionally causing a real database failure.
-
----
-
-## Verifying Repository Calls
-
-In addition to checking the returned result, I used Moq's `Verify()` method to make sure that `PatientService` actually called the repository.
+and verified the repository interaction:
 
 ```csharp
 mockRepo.Verify(
@@ -1059,89 +799,43 @@ mockRepo.Verify(
 );
 ```
 
-This confirms that:
-
-```csharp
-GetByIdAsync(1)
-```
-
-was called exactly once.
-
-This helped me understand that a unit test can check both the final result and the interaction between the service and its dependency.
-
----
-
-## Moq Test Results
-
-I ran the complete test project using:
-
-```bash
-dotnet test CardiacPatientMonitoringSystem.Tests
-```
-
-The existing xUnit tests and the new Moq tests passed successfully.
-
 ### Moq Tests Passed
 
 ![Moq Tests Passed](./screenshots/moq-tests-passed.png)
-
-Using Moq helped me understand how a service can be tested independently from a real dependency by controlling what that dependency returns, simulating failures, and verifying how it was called.
 
 ---
 
 # Integration Testing with WebApplicationFactory
 
-After unit testing individual methods and services, I continued by adding integration testing using `WebApplicationFactory`.
+After unit testing individual methods and services, I added integration testing using `WebApplicationFactory`.
 
 The goal was to test the API through real HTTP requests while still running everything inside a test environment.
 
-Unlike the previous unit tests, these tests verify multiple parts of the application working together, including routing, JWT authentication, controllers, Entity Framework Core, and HTTP responses.
-
----
-
-## Setting Up WebApplicationFactory
-
-I added the ASP.NET Core integration testing package:
-
-```bash
-dotnet add CardiacPatientMonitoringSystem.Tests/CardiacPatientMonitoringSystem.Tests.csproj package Microsoft.AspNetCore.Mvc.Testing
-```
-
-Because the application uses top-level statements in `Program.cs`, I exposed the generated `Program` class for the test project.
-
-At the end of `Program.cs`, I added:
-
-```csharp
-public partial class Program { }
-```
-
-This allows the test project to use:
-
-```csharp
-WebApplicationFactory<Program>
-```
-
-and start the API inside the test environment without manually running the application.
-
----
-
-## Using a Separate Test Database
-
-I did not want the integration tests to use the real SQL Server development database.
-
-For this reason, I added the EF Core In-Memory provider:
-
-```bash
-dotnet add CardiacPatientMonitoringSystem.Tests/CardiacPatientMonitoringSystem.Tests.csproj package Microsoft.EntityFrameworkCore.InMemory
-```
-
-I then created:
+The tests verify multiple parts of the application together:
 
 ```text
-CustomWebApplicationFactory.cs
+HttpClient
+    ↓
+ASP.NET Core Pipeline
+    ↓
+JWT Authentication
+    ↓
+Routing
+    ↓
+PatientsController
+    ↓
+AppDbContext
+    ↓
+In-Memory Test Database
+    ↓
+HTTP Response
+    ↓
+Assertions
 ```
 
-The custom factory replaces the normal SQL Server configuration with an isolated EF Core In-Memory database while integration tests are running.
+## Separate Test Database
+
+I used an **EF Core In-Memory database** instead of the normal SQL Server development database.
 
 ```csharp
 services.AddDbContext<AppDbContext>(options =>
@@ -1152,271 +846,176 @@ services.AddDbContext<AppDbContext>(options =>
 });
 ```
 
-The test database is recreated before the integration tests run:
+The database is recreated for the test environment:
 
 ```csharp
 context.Database.EnsureDeleted();
 context.Database.EnsureCreated();
 ```
 
-This keeps test data isolated from the normal development database.
-
-During the setup, I initially encountered a database provider conflict because both SQL Server and the In-Memory provider were registered in the test environment.
-
-The error indicated that:
-
-```text
-Microsoft.EntityFrameworkCore.SqlServer
-```
-
-and:
-
-```text
-Microsoft.EntityFrameworkCore.InMemory
-```
-
-were both registered.
-
-I fixed the problem by removing the existing `AppDbContext` database configuration inside `ConfigureTestServices()` before registering the In-Memory provider.
-
-This helped me better understand how dependency injection configuration can be replaced specifically for integration testing.
-
 ---
 
-## Get Patient Integration Test
+## Get Patient Integration Tests
 
-I created:
+The integration tests cover:
 
-```text
-PatientsApiTests.cs
+```http
+GET /api/patients/{id}
 ```
 
-The test class uses an `HttpClient` created by `CustomWebApplicationFactory`.
-
-The first integration test covers the successful Get-by-ID path:
+The first scenario tests:
 
 ```http
 GET /api/patients/1001
 ```
 
-The expected response is:
+Expected:
 
 ```text
 200 OK
 ```
 
-The response is deserialized into a `Patient` object:
+The returned patient is also checked to make sure the complete expected data is returned.
 
-```csharp
-var patient =
-    await response.Content.ReadFromJsonAsync<Patient>();
-```
-
-I then verify the returned patient information:
-
-```csharp
-Assert.Equal(1001, patient.Id);
-Assert.Equal("Ahmad Khalil", patient.FullName);
-Assert.Equal(new DateTime(1985, 6, 15), patient.DateOfBirth);
-Assert.Equal("Male", patient.Gender);
-Assert.Equal("0599123456", patient.PhoneNumber);
-Assert.Equal("Jenin", patient.Address);
-```
-
-This verifies that the API returns the expected patient data from the test database.
-
----
-
-## Testing the Not Found Path
-
-I also added an integration test for a patient ID that does not exist:
+The second scenario tests:
 
 ```http
 GET /api/patients/99999
 ```
 
-The expected response is:
+Expected:
 
 ```text
 404 Not Found
 ```
 
-The test verifies the status code using:
-
-```csharp
-Assert.Equal(
-    HttpStatusCode.NotFound,
-    response.StatusCode
-);
-```
-
-This confirms that the same API endpoint correctly handles both successful and not-found scenarios when tested through HTTP.
-
----
-
-## Testing a Protected Endpoint with JWT
-
-The `PatientsController` is protected using:
-
-```csharp
-[Authorize]
-```
-
-Because of this, the integration test needs a valid JWT before it can access the endpoint.
-
-I created a test JWT using the same issuer, audience, signing key, and signing algorithm expected by the API.
-
-The token is attached to the request using:
-
-```csharp
-_client.DefaultRequestHeaders.Authorization =
-    new AuthenticationHeaderValue(
-        "Bearer",
-        token
-    );
-```
-
-The request then passes through the real JWT authentication middleware before reaching the controller.
-
-This allows the integration test to verify an authenticated and protected endpoint while still running entirely inside the test environment.
-
----
-
-## Integration Test Flow
-
-The integration tests follow a flow similar to:
-
-```text
-xUnit Integration Test
-        ↓
-HttpClient
-        ↓
-ASP.NET Core Pipeline
-        ↓
-JWT Authentication
-        ↓
-Routing
-        ↓
-PatientsController
-        ↓
-AppDbContext
-        ↓
-In-Memory Test Database
-        ↓
-HTTP Response
-        ↓
-Assertions
-```
-
-This is different from the unit tests because multiple parts of the application are being tested together.
-
----
-
-## Integration Test Results
-
-I ran the complete test project using:
-
-```bash
-dotnet test CardiacPatientMonitoringSystem.Tests/CardiacPatientMonitoringSystem.Tests.csproj
-```
-
-The final result was:
-
-```text
-Total tests: 10
-Passed: 10
-Failed: 0
-```
-
-This includes the existing xUnit tests, the Moq tests, and the new integration tests.
+Because `PatientsController` is protected, the integration tests generate and send a valid test JWT.
 
 ### Integration Tests Passed
 
 ![Integration Tests Passed](./screenshots/integration-tests-passed.png)
 
-Adding integration tests helped me understand how automated testing can verify the API from a client's point of view without manually running Swagger or Postman.
+---
+
+# Validation Unit Testing
+
+As part of applying the Week 5 testing concepts to the project, I added unit tests for `CreatePatientValidator`.
+
+The validator is important because it protects the Patient API from invalid input before the controller performs a database operation.
+
+I created:
+
+```text
+CreatePatientValidatorTests.cs
+```
+
+The tests currently cover three scenarios.
+
+### Valid Patient
+
+A valid request should pass validation without errors.
+
+```csharp
+var request = new CreatePatientRequest
+{
+    FullName = "Ahmad Khalil",
+    DateOfBirth = new DateTime(1990, 5, 10),
+    Gender = "Male",
+    PhoneNumber = "0599123456",
+    Address = "Jenin"
+};
+
+var result = validator.Validate(request);
+
+Assert.True(result.IsValid);
+```
+
+### Empty Patient Name
+
+An empty `FullName` should fail validation.
+
+```csharp
+Assert.Contains(
+    result.Errors,
+    error => error.PropertyName == "FullName"
+);
+```
+
+### Future Date of Birth
+
+A date of birth in the future should also fail validation.
+
+```csharp
+Assert.Contains(
+    result.Errors,
+    error => error.PropertyName == "DateOfBirth"
+);
+```
+
+These tests allow the validation rules to be checked directly without starting the API or accessing the database.
 
 ---
 
-# Swagger / OpenAPI
+# Applying Testing Priorities
 
-I configured Swagger so the API can be explored and tested without needing a separate frontend application.
+At the end of Week 5, I reviewed the project and identified the areas that were more important to test first.
 
-Swagger displays the available controllers and endpoints and also supports JWT Bearer authentication.
+Instead of trying to test every method equally, I focused on logic with branching, dependencies, validation rules, and important API behavior.
 
-After running the project, Swagger can currently be opened at:
+The three main areas I prioritized were:
 
-```text
-http://localhost:5075/swagger
-```
+| Area | Reason |
+| --- | --- |
+| `PatientService.CalculateAge()` | Contains date calculation and branching logic |
+| `PatientService.GetPatientNameAsync()` | Depends on `IPatientRepository` and contains success/failure paths |
+| `CreatePatientValidator` | Prevents invalid patient information from reaching the API |
 
-> The development port may change depending on the local launch configuration. The active URL is also displayed in the terminal when the API starts.
+The first area is tested using xUnit `[Fact]` and `[Theory]` tests.
 
-### Swagger API Overview
+The second area is tested using Moq to control and verify the repository dependency.
 
-![Swagger API Overview](./screenshots/swagger-api-overview.png)
+The third area is tested directly through the FluentValidation validator.
 
-Swagger was useful for seeing the API as one complete system instead of testing every endpoint individually.
+This helped me understand that useful testing is not about reaching 100% coverage. The first priority should be the code where incorrect behavior could have a larger effect on the application.
 
 ---
 
-# Postman Testing
+# Week 5 Test Suite
 
-I also created Postman collections for testing the API.
-
-The main project collection contains requests for authentication and the four main resources.
-
-### Authentication
-
-- Register User
-- Login User
-- Protected request without token
-- Protected request with token
-
-### Patients
-
-- Create
-- Get All
-- Get By ID
-- Update
-- Delete
-- Not Found test
-- Validation error test
-
-### Vital Signs
-
-- Create
-- Get All
-- Get By ID
-- Update
-- Delete
-
-### Medications
-
-- Create
-- Get All
-- Get By ID
-- Update
-- Delete
-
-### Appointments
-
-- Create
-- Get All
-- Get By ID
-- Update
-- Delete
-- Filter by status
-
-The exported main Postman collection is available at:
+By the end of Week 5, the automated test suite includes:
 
 ```text
-Postman/Cardiac Patient Monitoring System.postman_collection.json
+Automated Tests
+│
+├── PatientService Unit Tests
+│   ├── Fact tests
+│   └── Theory tests
+│
+├── Moq Tests
+│   ├── Repository success
+│   ├── Repository failure
+│   └── Verify repository call
+│
+├── Validation Tests
+│   ├── Valid patient
+│   ├── Empty full name
+│   └── Future date of birth
+│
+└── Integration Tests
+    ├── Existing patient → 200 OK
+    └── Missing patient → 404 Not Found
 ```
 
-I also used a separate Day 4 collection while testing the global exception handler.
+The complete suite currently contains:
 
-Using Postman throughout development helped me test each feature immediately after implementing it instead of waiting until the whole project was finished.
+```text
+Total tests: 13
+Passed: 13
+Failed: 0
+Skipped: 0
+```
+
+This means all unit, Moq, validation, and integration tests currently pass together.
 
 ---
 
@@ -1424,23 +1023,17 @@ Using Postman throughout development helped me test each feature immediately aft
 
 ## Requirements
 
-To run the project locally, the following are required:
-
 - .NET 10 SDK
 - SQL Server LocalDB
 - Entity Framework Core CLI tools
 
----
-
 ## 1. Open the Project
 
-From the `Project1` directory:
+From `Project1`:
 
 ```bash
 cd CardiacPatientMonitoringSystem
 ```
-
----
 
 ## 2. Restore Packages
 
@@ -1448,19 +1041,11 @@ cd CardiacPatientMonitoringSystem
 dotnet restore
 ```
 
----
-
 ## 3. Create / Update the Database
-
-Run:
 
 ```bash
 dotnet ef database update
 ```
-
-This applies the existing migrations and creates the required SQL Server database structure and seed data.
-
----
 
 ## 4. Run the API
 
@@ -1468,83 +1053,68 @@ This applies the existing migrations and creates the required SQL Server databas
 dotnet run
 ```
 
-The terminal will display the local address used by the API.
-
-In my current development configuration, I use:
-
-```text
-http://localhost:5075
-```
-
----
-
 ## 5. Open Swagger
+
+In my current development configuration:
 
 ```text
 http://localhost:5075/swagger
 ```
 
+> The development port may change depending on the local launch configuration.
+
 ---
 
 # Running the Automated Tests
 
-The automated test project can be run separately from the API.
-
 From the `Project1` directory:
 
 ```bash
-dotnet test CardiacPatientMonitoringSystem.Tests/CardiacPatientMonitoringSystem.Tests.csproj
+dotnet test CardiacPatientMonitoringSystem.Tests
 ```
 
-This builds both the main API project and the test project and then runs the available automated tests.
+The test project builds the required projects and runs the complete automated test suite.
 
-The API does not need to be started manually in Swagger or Postman before running the tests.
-
-The unit tests execute application logic directly, while the integration tests use `WebApplicationFactory` to start the API inside the test environment and send HTTP requests through an in-memory `HttpClient`.
-
-The integration tests also use an isolated EF Core In-Memory database instead of the normal SQL Server development database.
+The API does not need to be started manually before running these tests.
 
 The current result is:
 
 ```text
-Total tests: 10
-Passed: 10
+Total tests: 13
+Passed: 13
 Failed: 0
+Skipped: 0
 ```
 
 ---
 
 # Database Configuration
 
-The development database connection is configured using:
+The development database uses:
 
 ```text
 (localdb)\MSSQLLocalDB
 ```
 
-Database name:
+Database:
 
 ```text
 CardiacPatientMonitoringDb
 ```
 
-Entity Framework Core uses the `DefaultConnection` connection string from the application configuration.
-
-The integration test environment does not use this database.
-
-Instead, it replaces the SQL Server configuration with:
+The integration tests use:
 
 ```text
 CardiacPatientMonitoringTestDb
 ```
 
-using the EF Core In-Memory provider.
+through the EF Core In-Memory provider instead of the development SQL Server database.
 
 ---
 
 # Example API Flow
 
-A normal authenticated request in the project follows a flow similar to:
+A normal authenticated API request follows:
 
 ```text
 Client / Postman / Swagger
@@ -1568,11 +1138,7 @@ SQL Server
 HTTP Response
 ```
 
-If an unexpected exception occurs later in the request pipeline, it can bubble back to the Global Exception Middleware, where it is logged and converted into a safe `ProblemDetails` response.
-
-Building the project this way helped me see how the individual topics from the training connect together inside a real backend application.
-
-The unit tests that use Moq follow a smaller path:
+A Moq unit test follows:
 
 ```text
 xUnit Test
@@ -1586,7 +1152,7 @@ Controlled Result
 Assert / Verify
 ```
 
-The integration tests use a wider application flow:
+An integration test follows:
 
 ```text
 Integration Test
@@ -1608,13 +1174,9 @@ HTTP Response
 Assertions
 ```
 
-This helped me understand that different types of tests verify the application at different levels.
-
 ---
 
 # Screenshots and Testing Evidence
-
-The following screenshots were captured while implementing and testing the project.
 
 ## Patients
 
@@ -1750,102 +1312,113 @@ The biggest benefit of this project was moving from small separate exercises int
 
 I became more comfortable with:
 
-- Designing entities and relationships before implementing endpoints.
-- Using DTOs instead of exposing entity classes directly for create/update requests.
+- Designing entities and relationships.
+- Using DTOs for API requests.
 - Working with SQL Server through Entity Framework Core.
 - Creating and applying migrations.
 - Writing asynchronous CRUD operations.
 - Using LINQ inside EF Core queries.
-- Understanding foreign-key relationships between resources.
-- Using Identity for user and password management.
-- Generating and validating JWT tokens.
+- Working with Identity and JWT authentication.
 - Protecting API endpoints.
-- Validating incoming requests before performing database operations.
+- Validating incoming requests.
 - Returning meaningful HTTP status codes.
-- Understanding where middleware executes in the ASP.NET Core pipeline.
-- Testing APIs with both Postman and Swagger.
+- Understanding the ASP.NET Core middleware pipeline.
+- Testing APIs with Postman and Swagger.
 - Creating a separate xUnit test project.
-- Referencing the main API project from a test project.
-- Understanding the difference between `[Fact]` and `[Theory]`.
-- Using `[InlineData]` to test multiple input cases.
-- Structuring unit tests using Arrange-Act-Assert.
-- Testing simple application logic independently from the API and database.
-- Understanding why dependencies should be isolated during unit testing.
-- Creating mocks with Moq.
-- Configuring mock return values using `Setup()` and `ReturnsAsync()`.
-- Simulating dependency failures using `ThrowsAsync()`.
-- Using `Verify()` and `Times.Once` to check dependency interactions.
-- Understanding the difference between unit tests and integration tests.
-- Using `WebApplicationFactory` to run the API inside the test environment.
-- Sending HTTP requests from integration tests using `HttpClient`.
-- Replacing SQL Server with an EF Core In-Memory database during integration testing.
-- Keeping integration test data isolated from the development database.
-- Testing protected API endpoints using a valid JWT.
-- Troubleshooting dependency injection and database provider conflicts during integration testing.
-- Understanding the problems caused by scattered exception handling.
-- Handling unexpected exceptions centrally using middleware.
-- Returning standardized error responses using `ProblemDetails`.
-- Avoiding exposure of exception messages and stack traces to API clients.
-- Logging complete exception details on the server using `ILogger`.
-- Using structured logging values such as HTTP method and request path.
-- Understanding the difference between expected API errors such as `404` and unexpected server errors such as `500`.
-- Keeping testing evidence while developing instead of only testing at the end.
+- Using `[Fact]`, `[Theory]`, and `[InlineData]`.
+- Following Arrange-Act-Assert.
+- Testing pure application logic.
+- Mocking dependencies with Moq.
+- Using `Setup()`, `ReturnsAsync()`, and `ThrowsAsync()`.
+- Verifying dependency calls using `Verify()` and `Times.Once`.
+- Understanding unit tests versus integration tests.
+- Using `WebApplicationFactory`.
+- Sending test HTTP requests using `HttpClient`.
+- Using an isolated EF Core In-Memory database.
+- Testing protected endpoints with a valid JWT.
+- Testing FluentValidation rules directly.
+- Prioritizing tests based on risk and complexity.
+- Handling unexpected exceptions centrally.
+- Returning standardized `ProblemDetails`.
+- Logging server-side exception information with `ILogger`.
 
-I also became more comfortable reading the complete request flow and understanding which part of the application is responsible for each operation.
+One of the most important lessons from Week 5 was that automated testing is not about writing a test for every line of code.
 
-The introduction to unit testing helped me understand that not every test needs to go through the complete HTTP request pipeline. Some logic can be tested directly.
+It is more useful to identify the parts of the application where a bug could have a larger impact and test those areas first.
 
-Using Moq extended this idea by allowing me to test a service even when it depends on another component, without using the real dependency during the test.
-
-Integration testing added another level by allowing me to send HTTP requests through the real ASP.NET Core pipeline and verify routing, authentication, controllers, and database access together.
-
-Adding global exception handling also helped me understand how middleware can be used for application-wide concerns. Instead of repeating unexpected error handling in individual endpoints, the API can now handle these failures consistently in one place while keeping detailed debugging information on the server.
+For this project, that meant focusing on branching logic, dependency behavior, validation, and important API endpoints.
 
 ---
 
 # Current Project Status
 
-At the current stage, I have completed the main API structure, database integration, CRUD modules, authentication, validation, middleware, filtering, seed data, Swagger documentation, Postman verification, automated unit testing with xUnit and Moq, API integration testing using WebApplicationFactory, and centralized exception handling.
+At the current stage, I have completed the main API structure, database integration, CRUD modules, authentication, validation, middleware, filtering, seed data, Swagger documentation, Postman verification, automated testing, and centralized exception handling.
 
-The current xUnit tests cover the `CalculateAge()` method using `[Fact]` and `[Theory]`.
+The automated testing setup currently includes:
 
-The Moq tests cover a service method that depends on `IPatientRepository`.
+### xUnit
 
-They include:
+Tests for `CalculateAge()` using:
 
-- Returning controlled repository data.
-- Testing how the service processes the returned data.
-- Simulating a repository exception.
-- Verifying that a repository method is called exactly once.
+- `[Fact]`
+- `[Theory]`
+- `[InlineData]`
 
-The integration tests currently cover:
+### Moq
 
-- A successful `GET /api/patients/1001` request.
-- Verifying the full returned patient response.
-- A `404 Not Found` request for a missing patient.
-- Using an isolated EF Core In-Memory test database.
-- Accessing a protected endpoint using a valid test JWT.
+Tests for `PatientService` with `IPatientRepository`, including:
 
-The project now also includes centralized handling for unexpected exceptions.
+- Controlled repository return data.
+- Repository failure simulation.
+- Repository call verification.
 
-The global exception handler:
+### Validation
 
-- Catches unhandled exceptions from the request pipeline.
-- Logs the real exception using `ILogger`.
-- Includes useful context such as the HTTP method and request path.
-- Returns `500 Internal Server Error`.
-- Uses a standardized `ProblemDetails` response.
-- Does not expose the real exception message or stack trace to the client.
+Tests for `CreatePatientValidator`, including:
 
-The complete automated test project currently contains:
+- Valid patient data.
+- Empty patient name.
+- Future date of birth.
 
-```text
-Total tests: 10
-Passed: 10
-Failed: 0
+### Integration Testing
+
+Tests for:
+
+```http
+GET /api/patients/{id}
 ```
 
-After implementing the global exception handler, I rebuilt the project and ran the complete test suite successfully.
+including:
+
+- Existing patient → `200 OK`.
+- Full patient response verification.
+- Missing patient → `404 Not Found`.
+- Valid JWT authentication.
+- EF Core In-Memory test database.
+
+### Global Error Handling
+
+The project also includes centralized handling for unexpected exceptions.
+
+The middleware:
+
+- Catches unhandled exceptions.
+- Logs the real exception with `ILogger`.
+- Includes request method and path in the log.
+- Returns `500 Internal Server Error`.
+- Uses `ProblemDetails`.
+- Does not expose exception messages or stack traces to the client.
+
+### Current Test Result
+
+```text
+Total tests: 13
+Passed: 13
+Failed: 0
+Skipped: 0
+```
+
+The complete test suite currently passes successfully.
 
 The remaining training-aligned work will be added as the next topics are covered. After completing the remaining requirements, I will perform the final project cleanup and documentation review.
 
@@ -1879,16 +1452,20 @@ The remaining training-aligned work will be added as the next topics are covered
 
 This project is being developed as an individual backend training project.
 
-My goal is not only to make the endpoints work, but also to understand how the main parts of an ASP.NET Core backend application work together, from receiving an HTTP request to validating it, authenticating the user, accessing the database, and returning the correct response.
+My goal is not only to make the endpoints work, but also to understand how the main parts of an ASP.NET Core backend application work together.
 
-As the project continues, I am also building automated tests at different levels.
+Week 5 added another important layer to the project: automated testing and centralized error handling.
 
-Using xUnit helped me understand how application logic can be tested directly.
+Using xUnit helped me test application logic directly.
 
 Using Moq helped me isolate services from their dependencies.
 
-Using WebApplicationFactory helped me move one step further and test the API through real HTTP requests inside an isolated test environment.
+Using WebApplicationFactory helped me test the API through real HTTP requests inside an isolated environment.
 
-Together, these testing approaches helped me understand the difference between testing one piece of code in isolation and testing multiple parts of the backend application working together.
+Testing FluentValidation directly helped me verify important input rules without having to start the API.
 
-Adding centralized exception handling also improved the reliability of the API. Unexpected errors are now handled consistently, detailed information is logged on the server, and clients receive a safe standardized response without internal exception details.
+The final Week 5 exercise also helped me understand that I should prioritize tests based on risk and important application behavior instead of simply trying to test everything.
+
+The project currently has **13 automated tests, and all 13 are passing**.
+
+Together, these additions make the project easier to verify as it continues to grow.
