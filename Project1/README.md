@@ -2,9 +2,9 @@
 
 ## Project Overview
 
-The **Cardiac Patient Monitoring System** is an individual ASP.NET Core Web API project that I built to apply the backend concepts I learned during my training in a complete and practical project.
+The **Cardiac Patient Monitoring System** is an ASP.NET Core Web API project that I built during my backend training.
 
-The idea of the system is to provide a backend API for managing cardiac patients and some of the information related to their monitoring and care.
+The main idea of the project is to manage cardiac patients and information related to their monitoring and care.
 
 The system currently manages four main resources:
 
@@ -13,63 +13,9 @@ The system currently manages four main resources:
 - Medications
 - Appointments
 
-I built the project step by step, starting with the project structure and data models, then connecting the API to SQL Server using Entity Framework Core. After that, I implemented the CRUD operations, authentication and authorization, input validation, middleware, seed data, filtering, Swagger documentation, Postman testing, automated testing using xUnit, Moq, and WebApplicationFactory, and centralized exception handling using ProblemDetails and structured logging.
+I built the project step by step. I started with the models and database, then added CRUD operations, authentication, validation, middleware, filtering, automated testing, and centralized error handling.
 
-During Week 5, I expanded the automated testing setup by prioritizing important and higher-risk logic, adding validation unit tests, and running the complete test suite together.
-
-The project uses only synthetic test data and does not contain real patient information.
-
----
-
-## What I Practiced in This Project
-
-This project helped me connect many backend concepts together instead of practicing each one separately.
-
-During the project, I worked with:
-
-- ASP.NET Core Web API
-- Controllers and Routing
-- Dependency Injection
-- Middleware
-- Async/Await
-- LINQ
-- DTOs
-- Entity Framework Core
-- SQL Server
-- Code-First Migrations
-- Entity Relationships
-- CRUD Operations
-- Synthetic Seed Data
-- ASP.NET Core Identity
-- JWT Authentication
-- Protected API Routes
-- FluentValidation
-- HTTP Status Codes
-- Filtering
-- Swagger / OpenAPI
-- Postman
-- xUnit
-- Unit Testing
-- `[Fact]` and `[Theory]`
-- Arrange-Act-Assert
-- Moq
-- Mocking Dependencies
-- Repository Interfaces
-- Mock Verification
-- Integration Testing
-- WebApplicationFactory
-- HttpClient Testing
-- EF Core In-Memory Database
-- Testing Protected Endpoints with JWT
-- Validation Unit Testing
-- Risk-Based Test Prioritization
-- Global Exception Handling
-- ProblemDetails
-- Structured Logging with ILogger
-
-The most useful part for me was seeing how these concepts work together in one project.
-
-I was also able to move from testing APIs manually using Postman and Swagger to writing automated tests at different levels. Unit tests allowed me to test small pieces of application logic directly, while integration tests allowed me to verify multiple parts of the API working together.
+The project uses synthetic test data only and does not contain real patient information.
 
 ---
 
@@ -109,45 +55,40 @@ Project1/
 
 ### Main Folders
 
-**Controllers/**  
-Contains the API endpoints for authentication, patients, vital signs, medications, and appointments.
+**Controllers**  
+Contain the API endpoints for Patients, Vital Signs, Medications, Appointments, and Authentication.
 
-**Models/**  
-Contains the Entity Framework Core entities that represent the database tables.
+**Models**  
+Contain the main database entities.
 
-**DTOs/**  
-Contains the request objects used when creating and updating resources. I used DTOs so that API requests are separated from the database entities.
+**DTOs**  
+Contain the request objects used when creating and updating data.
 
-**Data/**  
-Contains `AppDbContext`, which is responsible for the connection between Entity Framework Core and SQL Server.
+**Data**  
+Contains `AppDbContext`, which connects Entity Framework Core to the database.
 
-**Migrations/**  
-Contains the EF Core migrations used to create and update the database schema.
+**Validators**  
+Contain the FluentValidation rules.
 
-**Validators/**  
-Contains the FluentValidation rules for the Create and Update request DTOs.
+**Middleware**  
+Contains request logging and global exception handling.
 
-**Middleware/**  
-Contains the custom request logging middleware and the global exception-handling middleware. The exception middleware catches unexpected errors, logs their details on the server, and returns a safe standardized `ProblemDetails` response to the client.
+**Services**  
+Contains application logic such as the patient age calculation.
 
-**Repositories/**  
-Contains repository interfaces used to separate service logic from its dependencies. I added `IPatientRepository` while practicing dependency isolation and mocking with Moq.
+**Repositories**  
+Contains `IPatientRepository`, which I used while practicing dependency mocking with Moq.
 
-**Services/**  
-Contains simple application logic that can be separated from the controllers. `PatientService` currently contains the patient age calculation and a method that retrieves a patient's name through `IPatientRepository`.
-
-**CardiacPatientMonitoringSystem.Tests/**  
-Contains the automated unit and integration tests written using xUnit, Moq, FluentValidation, and WebApplicationFactory.
-
-The test project includes service-level unit tests, mocked dependency tests, validation tests, and HTTP integration tests against the API.
+**CardiacPatientMonitoringSystem.Tests**  
+Contains the xUnit, Moq, validation, and integration tests.
 
 ---
 
-# Database Design
+# Database and Entity Framework Core
 
 I used **SQL Server LocalDB** with **Entity Framework Core Code First**.
 
-The main entities are:
+The main relationship in the system is:
 
 ```text
 Patient
@@ -156,15 +97,11 @@ Patient
  └── Appointments
 ```
 
-A patient can have multiple vital-sign measurements, medications, and appointments.
-
-The relationships are therefore:
+A Patient can have many Vital Signs, Medications, and Appointments.
 
 ```text
 Patient 1 ---- * VitalSign
-
 Patient 1 ---- * Medication
-
 Patient 1 ---- * Appointment
 ```
 
@@ -178,13 +115,7 @@ public int PatientId { get; set; }
 public Patient Patient { get; set; } = null!;
 ```
 
-This helped me understand how one-to-many relationships are represented both in C# classes and in the SQL Server database.
-
----
-
-# Entity Framework Core and Migrations
-
-I configured `AppDbContext` to expose the main entities through `DbSet`.
+My `AppDbContext` exposes the main tables using `DbSet`:
 
 ```csharp
 public DbSet<Patient> Patients { get; set; }
@@ -193,7 +124,12 @@ public DbSet<Medication> Medications { get; set; }
 public DbSet<Appointment> Appointments { get; set; }
 ```
 
-I used EF Core migrations to build and update the database instead of manually creating the tables.
+I used EF Core migrations to create and update the database.
+
+```bash
+dotnet ef migrations add MigrationName
+dotnet ef database update
+```
 
 The project currently includes migrations for:
 
@@ -201,45 +137,34 @@ The project currently includes migrations for:
 - ASP.NET Core Identity
 - Synthetic seed data
 
-The main commands I used were:
-
-```bash
-dotnet ef migrations add MigrationName
-dotnet ef database update
-```
-
-This gave me more practice with the Code-First workflow and helped me understand how changes in the C# models can be reflected in the database schema.
-
 ---
 
 # Synthetic Seed Data
 
-I added synthetic seed data so the database contains example information after the migrations are applied.
+I added simple synthetic seed data so that I could test the API without creating all the data manually every time.
 
 The seed data includes:
 
-- A patient
-- A vital-sign measurement
-- A medication
-- An appointment
+- One Patient
+- One Vital Sign
+- One Medication
+- One Appointment
 
-The seeded patient uses:
+The seeded patient has:
 
 ```text
 Patient ID: 1001
 ```
 
-For example, I can retrieve the seeded patient using:
+I can retrieve the seeded patient using:
 
 ```http
 GET /api/patients/1001
 ```
 
-### Seed Data Test
+### Seeded Patient
 
 ![Seed Data Patient](./screenshots/seed-data-patient.png)
-
-Adding seed data made the project easier to test after creating the database because I do not need to manually create every record before verifying the API.
 
 ---
 
@@ -255,7 +180,7 @@ The Patient API supports full asynchronous CRUD operations.
 | PUT | `/api/patients/{id}` | Update a patient |
 | DELETE | `/api/patients/{id}` | Delete a patient |
 
-I used asynchronous EF Core methods such as:
+I used asynchronous Entity Framework Core methods such as:
 
 ```csharp
 await _context.Patients.ToListAsync();
@@ -263,7 +188,7 @@ await _context.Patients.FindAsync(id);
 await _context.SaveChangesAsync();
 ```
 
-This gave me practical experience using `async` and `await` inside a real Web API instead of only using them in isolated examples.
+This allowed the controller to work asynchronously when accessing the database.
 
 ### Get All Patients
 
@@ -275,19 +200,41 @@ This gave me practical experience using `async` and `await` inside a real Web AP
 
 ---
 
+# 404 Not Found Handling
+
+I also tested what happens when a Patient ID does not exist.
+
+Example:
+
+```http
+GET /api/patients/99999
+```
+
+The API returns:
+
+```text
+404 Not Found
+```
+
+### Patient Not Found
+
+![Patient Not Found](./screenshots/patient-not-found-404.png)
+
+---
+
 # Vital Signs API
 
-The Vital Signs module stores measurements related to a patient.
+The Vital Signs module stores cardiac measurements for a patient.
 
-The current model contains:
+Each Vital Sign contains:
 
+- Patient ID
 - Heart Rate
 - Systolic Blood Pressure
 - Diastolic Blood Pressure
 - Measurement Date and Time
-- Patient ID
 
-The available endpoints are:
+Available endpoints:
 
 | Method | Endpoint | Description |
 | --- | --- | --- |
@@ -297,14 +244,12 @@ The available endpoints are:
 | PUT | `/api/vitalsigns/{id}` | Update a vital sign |
 | DELETE | `/api/vitalsigns/{id}` | Delete a vital sign |
 
-Before creating or updating a vital sign, I also check that the referenced patient exists.
+Before creating or updating a Vital Sign, I check that the Patient exists.
 
 ```csharp
 var patientExists = await _context.Patients
     .AnyAsync(p => p.Id == request.PatientId);
 ```
-
-This prevents creating a vital-sign record for a patient that does not exist.
 
 ### Get All Vital Signs
 
@@ -318,16 +263,16 @@ This prevents creating a vital-sign record for a patient that does not exist.
 
 # Medications API
 
-The Medication module allows medications to be associated with a patient.
+The Medications module manages medications related to a patient.
 
-Each medication contains information such as:
+Each Medication contains:
 
-- Medication name
+- Patient ID
+- Medication Name
 - Dosage
 - Frequency
-- Start date
-- Optional end date
-- Patient ID
+- Start Date
+- Optional End Date
 
 Available endpoints:
 
@@ -339,7 +284,7 @@ Available endpoints:
 | PUT | `/api/medications/{id}` | Update a medication |
 | DELETE | `/api/medications/{id}` | Delete a medication |
 
-Just like Vital Signs, I verify that the patient exists before creating or updating the medication.
+I also check that the Patient exists before creating or updating a Medication.
 
 ### Get All Medications
 
@@ -353,13 +298,13 @@ Just like Vital Signs, I verify that the patient exists before creating or updat
 
 # Appointments API
 
-The Appointment module manages patient appointments.
+The Appointments module manages patient appointments.
 
-An appointment contains:
+Each Appointment contains:
 
 - Patient ID
-- Appointment date
-- Doctor name
+- Appointment Date
+- Doctor Name
 - Reason
 - Status
 
@@ -393,7 +338,7 @@ For example:
 GET /api/appointments?status=Scheduled
 ```
 
-The controller builds an EF Core query and only applies the filter when a status is provided.
+The controller starts with an `IQueryable`:
 
 ```csharp
 var query = _context.Appointments.AsQueryable();
@@ -406,6 +351,8 @@ if (!string.IsNullOrWhiteSpace(status))
 var appointments = await query.ToListAsync();
 ```
 
+This allows the API to return only appointments that match the requested status.
+
 ### Filter Appointments by Status
 
 ![Filter Appointments](./screenshots/appointments-filter-by-status.png)
@@ -414,16 +361,16 @@ var appointments = await query.ToListAsync();
 
 # Authentication with ASP.NET Core Identity
 
-I integrated **ASP.NET Core Identity** with the same EF Core database.
+I used **ASP.NET Core Identity** to manage application users and passwords.
 
-Identity is responsible for storing and managing application users, including password hashing.
-
-The authentication API provides:
+The Authentication API provides two main endpoints:
 
 ```http
 POST /api/auth/register
 POST /api/auth/login
 ```
+
+The register endpoint creates a new Identity user.
 
 ### Register User
 
@@ -435,7 +382,7 @@ POST /api/auth/login
 
 After a successful login, the API generates a **JSON Web Token (JWT)**.
 
-The JWT is signed using:
+The token is signed using:
 
 ```text
 HMAC SHA-256
@@ -452,39 +399,6 @@ The API validates:
 
 ![Login JWT](./screenshots/auth-login-jwt.png)
 
----
-
-# Protected Routes
-
-The main resource controllers are protected using:
-
-```csharp
-[Authorize]
-```
-
-This includes:
-
-- Patients
-- Vital Signs
-- Medications
-- Appointments
-
-### Request Without JWT
-
-![Unauthorized Request](./screenshots/auth-protected-401.png)
-
-```text
-401 Unauthorized
-```
-
-### Request With JWT
-
-![Authorized Request](./screenshots/auth-protected-200.png)
-
-```text
-200 OK
-```
-
 The authentication flow is:
 
 ```text
@@ -498,23 +412,66 @@ Send Bearer Token
    ↓
 JWT Validation
    ↓
-Protected Controller
+Protected Endpoint
 ```
+
+---
+
+# Protected API Routes
+
+The main controllers are protected using:
+
+```csharp
+[Authorize]
+```
+
+This includes:
+
+- Patients
+- Vital Signs
+- Medications
+- Appointments
+
+Without a JWT, the API returns:
+
+```text
+401 Unauthorized
+```
+
+### Protected Request Without JWT
+
+![Unauthorized Request](./screenshots/auth-protected-401.png)
+
+After sending a valid Bearer Token, the same endpoint can be accessed normally.
+
+```text
+200 OK
+```
+
+### Protected Request With JWT
+
+![Authorized Request](./screenshots/auth-protected-200.png)
+
+This helped me understand the difference between:
+
+**Authentication** — Who is the user?
+
+**Authorization** — Is the user allowed to access this endpoint?
 
 ---
 
 # Input Validation with FluentValidation
 
-I used **FluentValidation** instead of placing validation logic directly inside every controller.
+I used **FluentValidation** to keep validation rules separate from the controllers.
 
-I created validators for both Create and Update DTOs for:
+I created Create and Update validators for:
 
-- Patient
-- Vital Sign
-- Medication
-- Appointment
+- Patients
+- Vital Signs
+- Medications
+- Appointments
 
-For example:
+For example, the Patient validator contains rules such as:
 
 ```csharp
 RuleFor(x => x.FullName)
@@ -527,64 +484,48 @@ RuleFor(x => x.DateOfBirth)
     .WithMessage("Date of birth must be in the past.");
 ```
 
-I registered the validators in the application pipeline:
+The validators are registered in `Program.cs`:
 
 ```csharp
 builder.Services.AddFluentValidationAutoValidation();
-builder.Services.AddValidatorsFromAssemblyContaining<CreatePatientValidator>();
+
+builder.Services.AddValidatorsFromAssemblyContaining<
+    CreatePatientValidator>();
 ```
 
-### Validation Error
-
-![Patient Validation Error](./screenshots/validation-patient-400.png)
-
-The API correctly returns:
+If the request contains invalid data, the API returns:
 
 ```text
 400 Bad Request
 ```
 
+### Invalid Patient Request
+
+![Patient Validation Error](./screenshots/validation-patient-400.png)
+
 ---
 
 # HTTP Status Codes
 
+I tested different API scenarios and made sure the endpoints return suitable HTTP status codes.
+
 | Status Code | Meaning | Example |
 | --- | --- | --- |
-| `200 OK` | Successful request | Getting resources |
-| `201 Created` | Resource successfully created | Creating a patient |
-| `204 No Content` | Successful operation without response body | Update/Delete |
-| `400 Bad Request` | Invalid input | FluentValidation failure |
+| `200 OK` | Successful request | Get resources |
+| `201 Created` | Resource created | Create Patient |
+| `204 No Content` | Successful update/delete | Update or Delete |
+| `400 Bad Request` | Invalid input | Validation error |
 | `401 Unauthorized` | Authentication required | Missing JWT |
-| `404 Not Found` | Resource does not exist | Invalid patient ID |
+| `404 Not Found` | Resource does not exist | Invalid Patient ID |
 | `500 Internal Server Error` | Unexpected server error | Global exception handler |
 
 ---
 
-# 404 Not Found Handling
+# Request Logging Middleware
 
-Example:
+I created a custom middleware to log incoming requests and response status codes.
 
-```http
-GET /api/patients/99999
-```
-
-returns:
-
-```text
-404 Not Found
-```
-
-### Patient Not Found
-
-![Patient Not Found](./screenshots/patient-not-found-404.png)
-
----
-
-# Custom Middleware
-
-I added a custom request logging middleware to better understand the ASP.NET Core request pipeline.
-
-The middleware logs the HTTP method and path before continuing the request:
+Before calling the next middleware:
 
 ```csharp
 Console.WriteLine(
@@ -592,7 +533,7 @@ Console.WriteLine(
 );
 ```
 
-It then calls the next component:
+Then:
 
 ```csharp
 await _next(context);
@@ -613,17 +554,15 @@ Request: GET /api/patients
 Response Status: 200
 ```
 
+This helped me understand how middleware works inside the ASP.NET Core request pipeline.
+
 ---
 
 # Global Exception Handling
 
-I added centralized exception handling to the project using:
+I added a `GlobalExceptionMiddleware` to handle unexpected errors in one central place.
 
-```text
-GlobalExceptionMiddleware.cs
-```
-
-The middleware wraps the remaining request pipeline:
+The basic idea is:
 
 ```csharp
 try
@@ -632,17 +571,20 @@ try
 }
 catch (Exception ex)
 {
-    // Log the exception and return a safe response
+    // Log the exception
+    // Return a safe response
 }
 ```
 
-This provides one central place for handling unexpected exceptions.
+Instead of adding the same `try/catch` inside every controller, the middleware can catch unexpected exceptions from the request pipeline.
 
 ---
 
-## ProblemDetails Response
+## ProblemDetails
 
-For unexpected errors, the API returns a standardized response:
+For unexpected errors, the API returns a standardized `ProblemDetails` response.
+
+Example:
 
 ```json
 {
@@ -652,20 +594,23 @@ For unexpected errors, the API returns a standardized response:
 }
 ```
 
-The response uses:
+The client receives:
 
 ```text
 500 Internal Server Error
-application/problem+json
 ```
 
-The actual exception message and stack trace are not exposed to the client.
+but does not receive the real exception message or stack trace.
+
+### Safe 500 Response
+
+![Global Exception Response](./screenshots/global-exception-500.png)
 
 ---
 
-## Structured Exception Logging
+## Exception Logging
 
-The real exception is logged on the server using `ILogger`.
+The real exception is still useful for debugging, so I log it on the server using `ILogger`.
 
 ```csharp
 _logger.LogError(
@@ -676,11 +621,7 @@ _logger.LogError(
 );
 ```
 
-This keeps debugging information on the server while returning a safe response to the client.
-
-### Global Exception Response
-
-![Global Exception Response](./screenshots/global-exception-500.png)
+This gives me the real exception on the server while keeping the API response safe.
 
 ### Server Exception Log
 
@@ -690,20 +631,25 @@ This keeps debugging information on the server while returning a safe response t
 
 # Unit Testing with xUnit
 
-I created a separate xUnit test project:
+During Week 5, I started adding automated testing using **xUnit**.
+
+I created a separate test project:
 
 ```text
 CardiacPatientMonitoringSystem.Tests
 ```
 
-For the first unit-testing exercise, I added a `PatientService` containing a method for calculating a patient's age.
+For the first unit tests, I created a `PatientService` method that calculates a patient's age.
 
 ```csharp
-public int CalculateAge(DateTime dateOfBirth, DateTime referenceDate)
+public int CalculateAge(
+    DateTime dateOfBirth,
+    DateTime referenceDate)
 {
     int age = referenceDate.Year - dateOfBirth.Year;
 
-    if (dateOfBirth.Date > referenceDate.AddYears(-age).Date)
+    if (dateOfBirth.Date >
+        referenceDate.AddYears(-age).Date)
     {
         age--;
     }
@@ -712,17 +658,17 @@ public int CalculateAge(DateTime dateOfBirth, DateTime referenceDate)
 }
 ```
 
-I used a reference date instead of the current system date directly so the tests remain predictable.
+I passed a `referenceDate` instead of using the current system date directly so that the test result stays predictable.
 
-I wrote three `[Fact]` tests covering:
+I tested three situations using `[Fact]`:
 
-- Birthday already passed.
-- Birthday not yet reached.
-- Birthday occurring on the reference date.
+- Birthday already passed
+- Birthday has not happened yet
+- Birthday is today
 
-I also created a `[Theory]` with three `[InlineData]` cases.
+I also used `[Theory]` with `[InlineData]` to run the same test logic with multiple inputs.
 
-The tests follow:
+The tests follow the **Arrange - Act - Assert** pattern:
 
 ```text
 Arrange
@@ -732,7 +678,7 @@ Act
 Assert
 ```
 
-The first test suite contained:
+The first xUnit suite contained:
 
 ```text
 3 Fact cases
@@ -742,7 +688,7 @@ The first test suite contained:
 6 test cases
 ```
 
-### xUnit Test Results
+### xUnit Test Result
 
 ![xUnit Tests Passed](./screenshots/xunit-tests-passed.png)
 
@@ -750,7 +696,7 @@ The first test suite contained:
 
 # Mocking Dependencies with Moq
 
-I continued testing by learning how to isolate `PatientService` from its dependency using **Moq**.
+After basic unit testing, I used **Moq** to test a service that depends on another component.
 
 I created:
 
@@ -761,36 +707,40 @@ public interface IPatientRepository
 }
 ```
 
-`PatientService` receives the repository through constructor injection:
+`PatientService` receives the repository through constructor injection.
 
 ```csharp
 private readonly IPatientRepository _patientRepository;
 
-public PatientService(IPatientRepository patientRepository)
+public PatientService(
+    IPatientRepository patientRepository)
 {
     _patientRepository = patientRepository;
 }
 ```
 
-Using Moq, I can control what the repository returns:
+During the test, I replace the real repository with a mock.
 
 ```csharp
-var mockRepo = new Mock<IPatientRepository>();
+var mockRepo =
+    new Mock<IPatientRepository>();
 
 mockRepo
     .Setup(r => r.GetByIdAsync(1))
     .ReturnsAsync(patient);
 ```
 
-I also simulated a dependency failure:
+I also tested a repository failure:
 
 ```csharp
 mockRepo
     .Setup(r => r.GetByIdAsync(1))
-    .ThrowsAsync(new Exception("Database error"));
+    .ThrowsAsync(
+        new Exception("Database error")
+    );
 ```
 
-and verified the repository interaction:
+Finally, I used `Verify()` to check that the expected repository method was called once.
 
 ```csharp
 mockRepo.Verify(
@@ -799,7 +749,9 @@ mockRepo.Verify(
 );
 ```
 
-### Moq Tests Passed
+This allowed me to test `PatientService` without using the real database.
+
+### Moq Test Result
 
 ![Moq Tests Passed](./screenshots/moq-tests-passed.png)
 
@@ -807,35 +759,39 @@ mockRepo.Verify(
 
 # Integration Testing with WebApplicationFactory
 
-After unit testing individual methods and services, I added integration testing using `WebApplicationFactory`.
+After testing small parts of the application separately, I added **Integration Testing** using `WebApplicationFactory`.
 
-The goal was to test the API through real HTTP requests while still running everything inside a test environment.
+The purpose was to test a real HTTP request through multiple parts of the API.
 
-The tests verify multiple parts of the application together:
+The integration test flow is:
 
 ```text
+xUnit Test
+    ↓
 HttpClient
     ↓
 ASP.NET Core Pipeline
     ↓
 JWT Authentication
     ↓
-Routing
-    ↓
 PatientsController
     ↓
-AppDbContext
+Entity Framework Core
     ↓
-In-Memory Test Database
+In-Memory Database
     ↓
 HTTP Response
     ↓
 Assertions
 ```
 
-## Separate Test Database
+---
 
-I used an **EF Core In-Memory database** instead of the normal SQL Server development database.
+## In-Memory Test Database
+
+I did not want integration tests to modify my normal SQL Server development database.
+
+For that reason, I replaced it with an EF Core In-Memory database during integration tests.
 
 ```csharp
 services.AddDbContext<AppDbContext>(options =>
@@ -846,7 +802,7 @@ services.AddDbContext<AppDbContext>(options =>
 });
 ```
 
-The database is recreated for the test environment:
+The test database is recreated for the test environment:
 
 ```csharp
 context.Database.EnsureDeleted();
@@ -855,7 +811,7 @@ context.Database.EnsureCreated();
 
 ---
 
-## Get Patient Integration Tests
+## Patient Integration Tests
 
 The integration tests cover:
 
@@ -863,7 +819,7 @@ The integration tests cover:
 GET /api/patients/{id}
 ```
 
-The first scenario tests:
+### Existing Patient
 
 ```http
 GET /api/patients/1001
@@ -875,9 +831,9 @@ Expected:
 200 OK
 ```
 
-The returned patient is also checked to make sure the complete expected data is returned.
+The test also checks the returned Patient data.
 
-The second scenario tests:
+### Missing Patient
 
 ```http
 GET /api/patients/99999
@@ -889,9 +845,9 @@ Expected:
 404 Not Found
 ```
 
-Because `PatientsController` is protected, the integration tests generate and send a valid test JWT.
+Because `PatientsController` is protected, the test also generates and sends a valid JWT.
 
-### Integration Tests Passed
+### Integration Test Result
 
 ![Integration Tests Passed](./screenshots/integration-tests-passed.png)
 
@@ -899,9 +855,7 @@ Because `PatientsController` is protected, the integration tests generate and se
 
 # Validation Unit Testing
 
-As part of applying the Week 5 testing concepts to the project, I added unit tests for `CreatePatientValidator`.
-
-The validator is important because it protects the Patient API from invalid input before the controller performs a database operation.
+I also added direct unit tests for `CreatePatientValidator`.
 
 I created:
 
@@ -909,30 +863,19 @@ I created:
 CreatePatientValidatorTests.cs
 ```
 
-The tests currently cover three scenarios.
+The tests cover:
 
 ### Valid Patient
 
-A valid request should pass validation without errors.
+A correct Patient request should pass validation.
 
 ```csharp
-var request = new CreatePatientRequest
-{
-    FullName = "Ahmad Khalil",
-    DateOfBirth = new DateTime(1990, 5, 10),
-    Gender = "Male",
-    PhoneNumber = "0599123456",
-    Address = "Jenin"
-};
-
-var result = validator.Validate(request);
-
 Assert.True(result.IsValid);
 ```
 
 ### Empty Patient Name
 
-An empty `FullName` should fail validation.
+An empty `FullName` should fail.
 
 ```csharp
 Assert.Contains(
@@ -943,7 +886,7 @@ Assert.Contains(
 
 ### Future Date of Birth
 
-A date of birth in the future should also fail validation.
+A future Date of Birth should also fail.
 
 ```csharp
 Assert.Contains(
@@ -952,61 +895,49 @@ Assert.Contains(
 );
 ```
 
-These tests allow the validation rules to be checked directly without starting the API or accessing the database.
+This allowed me to verify the validation rules without sending an HTTP request.
 
 ---
 
-# Applying Testing Priorities
+# Testing Priorities
 
-At the end of Week 5, I reviewed the project and identified the areas that were more important to test first.
+At the end of Week 5, I reviewed the project and focused on the areas that were more important to test first.
 
-Instead of trying to test every method equally, I focused on logic with branching, dependencies, validation rules, and important API behavior.
+The three main areas were:
 
-The three main areas I prioritized were:
-
-| Area | Reason |
+| Area | Why I Tested It |
 | --- | --- |
-| `PatientService.CalculateAge()` | Contains date calculation and branching logic |
-| `PatientService.GetPatientNameAsync()` | Depends on `IPatientRepository` and contains success/failure paths |
-| `CreatePatientValidator` | Prevents invalid patient information from reaching the API |
+| `CalculateAge()` | Contains date calculation and branching |
+| `GetPatientNameAsync()` | Depends on a repository and has success/failure paths |
+| `CreatePatientValidator` | Protects the API from invalid Patient data |
 
-The first area is tested using xUnit `[Fact]` and `[Theory]` tests.
+This helped me understand that testing is not about trying to test every line.
 
-The second area is tested using Moq to control and verify the repository dependency.
-
-The third area is tested directly through the FluentValidation validator.
-
-This helped me understand that useful testing is not about reaching 100% coverage. The first priority should be the code where incorrect behavior could have a larger effect on the application.
+It is better to start with important logic and areas where a bug could have a bigger effect.
 
 ---
 
-# Week 5 Test Suite
+# Current Automated Test Suite
 
-By the end of Week 5, the automated test suite includes:
+The test project currently includes:
 
 ```text
 Automated Tests
 │
-├── PatientService Unit Tests
-│   ├── Fact tests
-│   └── Theory tests
+├── xUnit Unit Tests
+│   └── CalculateAge()
 │
 ├── Moq Tests
-│   ├── Repository success
-│   ├── Repository failure
-│   └── Verify repository call
+│   └── PatientService + IPatientRepository
 │
 ├── Validation Tests
-│   ├── Valid patient
-│   ├── Empty full name
-│   └── Future date of birth
+│   └── CreatePatientValidator
 │
 └── Integration Tests
-    ├── Existing patient → 200 OK
-    └── Missing patient → 404 Not Found
+    └── GET /api/patients/{id}
 ```
 
-The complete suite currently contains:
+Current result:
 
 ```text
 Total tests: 13
@@ -1015,45 +946,15 @@ Failed: 0
 Skipped: 0
 ```
 
-This means all unit, Moq, validation, and integration tests currently pass together.
+All current automated tests pass successfully.
 
 ---
 
-# Running the Project
+# Swagger / OpenAPI
 
-## Requirements
+I configured Swagger to make it easier to view and manually test the API.
 
-- .NET 10 SDK
-- SQL Server LocalDB
-- Entity Framework Core CLI tools
-
-## 1. Open the Project
-
-From `Project1`:
-
-```bash
-cd CardiacPatientMonitoringSystem
-```
-
-## 2. Restore Packages
-
-```bash
-dotnet restore
-```
-
-## 3. Create / Update the Database
-
-```bash
-dotnet ef database update
-```
-
-## 4. Run the API
-
-```bash
-dotnet run
-```
-
-## 5. Open Swagger
+Swagger shows the available controllers and endpoints and also supports JWT Bearer authentication.
 
 In my current development configuration:
 
@@ -1061,63 +962,76 @@ In my current development configuration:
 http://localhost:5075/swagger
 ```
 
-> The development port may change depending on the local launch configuration.
+> The port may change depending on the local launch configuration.
+
+### Swagger API Overview
+
+![Swagger API Overview](./screenshots/swagger-api-overview.png)
 
 ---
 
-# Running the Automated Tests
+# Postman Testing
 
-From the `Project1` directory:
+I also use Postman to manually test the API.
 
-```bash
-dotnet test CardiacPatientMonitoringSystem.Tests
-```
+The main Postman collection contains requests for:
 
-The test project builds the required projects and runs the complete automated test suite.
+### Authentication
 
-The API does not need to be started manually before running these tests.
+- Register
+- Login
+- Protected request without JWT
+- Protected request with JWT
 
-The current result is:
+### Patients
+
+- Create
+- Get All
+- Get By ID
+- Update
+- Delete
+- 404 Not Found
+- Validation Error
+
+### Vital Signs
+
+- Create
+- Get All
+- Get By ID
+- Update
+- Delete
+
+### Medications
+
+- Create
+- Get All
+- Get By ID
+- Update
+- Delete
+
+### Appointments
+
+- Create
+- Get All
+- Get By ID
+- Update
+- Delete
+- Filter by status
+
+The exported collection is stored in:
 
 ```text
-Total tests: 13
-Passed: 13
-Failed: 0
-Skipped: 0
+Postman/Cardiac Patient Monitoring System.postman_collection.json
 ```
 
 ---
 
-# Database Configuration
+# API Request Flow
 
-The development database uses:
-
-```text
-(localdb)\MSSQLLocalDB
-```
-
-Database:
+A normal protected request follows this flow:
 
 ```text
-CardiacPatientMonitoringDb
-```
-
-The integration tests use:
-
-```text
-CardiacPatientMonitoringTestDb
-```
-
-through the EF Core In-Memory provider instead of the development SQL Server database.
-
----
-
-# Example API Flow
-
-A normal authenticated API request follows:
-
-```text
-Client / Postman / Swagger
+Client / Swagger / Postman
           ↓
 Global Exception Middleware
           ↓
@@ -1138,278 +1052,55 @@ SQL Server
 HTTP Response
 ```
 
-A Moq unit test follows:
+This flow helped me understand how the different parts of an ASP.NET Core backend work together.
 
-```text
-xUnit Test
-    ↓
-PatientService
-    ↓
-Mock<IPatientRepository>
-    ↓
-Controlled Result
-    ↓
-Assert / Verify
+---
+
+# Running the Project
+
+## Requirements
+
+- .NET 10 SDK
+- SQL Server LocalDB
+- Entity Framework Core CLI tools
+
+From the `Project1` folder:
+
+```bash
+cd CardiacPatientMonitoringSystem
 ```
 
-An integration test follows:
+Restore the packages:
 
-```text
-Integration Test
-      ↓
-HttpClient
-      ↓
-ASP.NET Core Pipeline
-      ↓
-JWT Authentication
-      ↓
-Controller
-      ↓
-Entity Framework Core
-      ↓
-In-Memory Test Database
-      ↓
-HTTP Response
-      ↓
-Assertions
+```bash
+dotnet restore
 ```
 
----
+Apply the migrations:
 
-# Screenshots and Testing Evidence
-
-## Patients
-
-### Get All Patients
-
-![Get All Patients](./screenshots/patients-get-all.png)
-
-### Delete Patient
-
-![Delete Patient](./screenshots/patients-Delete.png)
-
-### Patient Not Found - 404
-
-![Patient Not Found](./screenshots/patient-not-found-404.png)
-
----
-
-## Vital Signs
-
-### Get All Vital Signs
-
-![Get All Vital Signs](./screenshots/vitalsigns-get-all.png)
-
-### Delete Vital Sign
-
-![Delete Vital Sign](./screenshots/vitalsigns-delete.png)
-
----
-
-## Medications
-
-### Get All Medications
-
-![Get All Medications](./screenshots/medications-get-all.png)
-
-### Delete Medication
-
-![Delete Medication](./screenshots/medications-delete.png)
-
----
-
-## Appointments
-
-### Get All Appointments
-
-![Get All Appointments](./screenshots/appointments-get-all.png)
-
-### Delete Appointment
-
-![Delete Appointment](./screenshots/appointments-delete.png)
-
-### Filter Appointments by Status
-
-![Appointment Filtering](./screenshots/appointments-filter-by-status.png)
-
----
-
-## Authentication
-
-### Register
-
-![Register](./screenshots/auth-register.png)
-
-### Login and JWT
-
-![Login JWT](./screenshots/auth-login-jwt.png)
-
-### Protected Endpoint Without Token
-
-![401 Unauthorized](./screenshots/auth-protected-401.png)
-
-### Protected Endpoint With Token
-
-![200 Authorized](./screenshots/auth-protected-200.png)
-
----
-
-## Validation
-
-### Invalid Patient Request
-
-![Validation Error](./screenshots/validation-patient-400.png)
-
----
-
-## Seed Data
-
-### Seeded Patient
-
-![Seed Patient](./screenshots/seed-data-patient.png)
-
----
-
-## Automated Testing
-
-### xUnit Tests
-
-![xUnit Tests Passed](./screenshots/xunit-tests-passed.png)
-
-### Moq Tests
-
-![Moq Tests Passed](./screenshots/moq-tests-passed.png)
-
-### Integration Tests
-
-![Integration Tests Passed](./screenshots/integration-tests-passed.png)
-
----
-
-## Global Exception Handling
-
-### Safe 500 ProblemDetails Response
-
-![Global Exception Response](./screenshots/global-exception-500.png)
-
-### Structured Server Log
-
-![Global Exception Log](./screenshots/global-exception-log.png)
-
----
-
-## Swagger
-
-### API Documentation
-
-![Swagger](./screenshots/swagger-api-overview.png)
-
----
-
-# What I Learned
-
-The biggest benefit of this project was moving from small separate exercises into one API where multiple backend concepts depend on each other.
-
-I became more comfortable with:
-
-- Designing entities and relationships.
-- Using DTOs for API requests.
-- Working with SQL Server through Entity Framework Core.
-- Creating and applying migrations.
-- Writing asynchronous CRUD operations.
-- Using LINQ inside EF Core queries.
-- Working with Identity and JWT authentication.
-- Protecting API endpoints.
-- Validating incoming requests.
-- Returning meaningful HTTP status codes.
-- Understanding the ASP.NET Core middleware pipeline.
-- Testing APIs with Postman and Swagger.
-- Creating a separate xUnit test project.
-- Using `[Fact]`, `[Theory]`, and `[InlineData]`.
-- Following Arrange-Act-Assert.
-- Testing pure application logic.
-- Mocking dependencies with Moq.
-- Using `Setup()`, `ReturnsAsync()`, and `ThrowsAsync()`.
-- Verifying dependency calls using `Verify()` and `Times.Once`.
-- Understanding unit tests versus integration tests.
-- Using `WebApplicationFactory`.
-- Sending test HTTP requests using `HttpClient`.
-- Using an isolated EF Core In-Memory database.
-- Testing protected endpoints with a valid JWT.
-- Testing FluentValidation rules directly.
-- Prioritizing tests based on risk and complexity.
-- Handling unexpected exceptions centrally.
-- Returning standardized `ProblemDetails`.
-- Logging server-side exception information with `ILogger`.
-
-One of the most important lessons from Week 5 was that automated testing is not about writing a test for every line of code.
-
-It is more useful to identify the parts of the application where a bug could have a larger impact and test those areas first.
-
-For this project, that meant focusing on branching logic, dependency behavior, validation, and important API endpoints.
-
----
-
-# Current Project Status
-
-At the current stage, I have completed the main API structure, database integration, CRUD modules, authentication, validation, middleware, filtering, seed data, Swagger documentation, Postman verification, automated testing, and centralized exception handling.
-
-The automated testing setup currently includes:
-
-### xUnit
-
-Tests for `CalculateAge()` using:
-
-- `[Fact]`
-- `[Theory]`
-- `[InlineData]`
-
-### Moq
-
-Tests for `PatientService` with `IPatientRepository`, including:
-
-- Controlled repository return data.
-- Repository failure simulation.
-- Repository call verification.
-
-### Validation
-
-Tests for `CreatePatientValidator`, including:
-
-- Valid patient data.
-- Empty patient name.
-- Future date of birth.
-
-### Integration Testing
-
-Tests for:
-
-```http
-GET /api/patients/{id}
+```bash
+dotnet ef database update
 ```
 
-including:
+Run the API:
 
-- Existing patient → `200 OK`.
-- Full patient response verification.
-- Missing patient → `404 Not Found`.
-- Valid JWT authentication.
-- EF Core In-Memory test database.
+```bash
+dotnet run
+```
 
-### Global Error Handling
+Then open Swagger using the URL displayed in the terminal.
 
-The project also includes centralized handling for unexpected exceptions.
+---
 
-The middleware:
+# Running the Tests
 
-- Catches unhandled exceptions.
-- Logs the real exception with `ILogger`.
-- Includes request method and path in the log.
-- Returns `500 Internal Server Error`.
-- Uses `ProblemDetails`.
-- Does not expose exception messages or stack traces to the client.
+From the `Project1` directory:
 
-### Current Test Result
+```bash
+dotnet test CardiacPatientMonitoringSystem.Tests
+```
+
+Current result:
 
 ```text
 Total tests: 13
@@ -1418,9 +1109,7 @@ Failed: 0
 Skipped: 0
 ```
 
-The complete test suite currently passes successfully.
-
-The remaining training-aligned work will be added as the next topics are covered. After completing the remaining requirements, I will perform the final project cleanup and documentation review.
+The API does not need to be started manually before running the automated tests.
 
 ---
 
@@ -1438,9 +1127,9 @@ The remaining training-aligned work will be added as the next topics are covered
 - LINQ
 - xUnit
 - Moq
-- Microsoft.AspNetCore.Mvc.Testing
 - WebApplicationFactory
-- ASP.NET Core ProblemDetails
+- HttpClient
+- ProblemDetails
 - ILogger
 - Swagger / OpenAPI
 - Postman
@@ -1448,24 +1137,62 @@ The remaining training-aligned work will be added as the next topics are covered
 
 ---
 
-## Final Note
+# What I Learned
 
-This project is being developed as an individual backend training project.
+This project helped me connect the backend topics I learned during the training inside one application.
 
-My goal is not only to make the endpoints work, but also to understand how the main parts of an ASP.NET Core backend application work together.
+I practiced how to:
 
-Week 5 added another important layer to the project: automated testing and centralized error handling.
+- Design related database entities.
+- Use Entity Framework Core and migrations.
+- Build asynchronous CRUD APIs.
+- Use DTOs and validation.
+- Create authentication using Identity and JWT.
+- Protect API endpoints.
+- Use LINQ for filtering.
+- Understand the middleware pipeline.
+- Handle unexpected exceptions globally.
+- Test APIs manually with Swagger and Postman.
+- Write unit tests using xUnit.
+- Use `[Fact]`, `[Theory]`, and `[InlineData]`.
+- Mock dependencies using Moq.
+- Test validation rules directly.
+- Write integration tests using WebApplicationFactory.
+- Use an isolated In-Memory database for integration tests.
+- Test a protected endpoint using JWT.
+- Decide which parts of the project should be tested first.
 
-Using xUnit helped me test application logic directly.
+The biggest change for me was moving from only testing manually with Swagger and Postman to also having automated tests that I can run whenever the project changes.
 
-Using Moq helped me isolate services from their dependencies.
+---
 
-Using WebApplicationFactory helped me test the API through real HTTP requests inside an isolated environment.
+# Current Project Status
 
-Testing FluentValidation directly helped me verify important input rules without having to start the API.
+At this stage, the project includes:
 
-The final Week 5 exercise also helped me understand that I should prioritize tests based on risk and important application behavior instead of simply trying to test everything.
+- Database design and EF Core
+- CRUD for all four main resources
+- Async database operations
+- Seed data
+- LINQ filtering
+- ASP.NET Core Identity
+- JWT Authentication
+- Protected endpoints
+- FluentValidation
+- Request logging middleware
+- Global exception handling
+- Swagger documentation
+- Postman testing
+- xUnit unit tests
+- Moq tests
+- Validator tests
+- Integration tests
+- EF Core In-Memory test database
 
-The project currently has **13 automated tests, and all 13 are passing**.
+The current automated test result is:
 
-Together, these additions make the project easier to verify as it continues to grow.
+```text
+13 / 13 tests passing
+```
+
+I will continue updating the same project as the remaining training topics are covered.
