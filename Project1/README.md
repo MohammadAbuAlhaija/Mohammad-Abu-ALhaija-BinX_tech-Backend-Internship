@@ -1196,3 +1196,7 @@ The current automated test result is:
 ```
 
 I will continue updating the same project as the remaining training topics are covered.
+
+/////////////////////////////////////////////////
+
+![Cardiac Patient Monitoring System ERD](./screenshots/cardiac-patient-monitoring-erd.png)
