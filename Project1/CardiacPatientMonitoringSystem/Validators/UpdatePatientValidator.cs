@@ -9,7 +9,7 @@ public class UpdatePatientValidator : AbstractValidator<UpdatePatientRequest>
     {
         RuleFor(x => x.FullName)
             .NotEmpty()
-            .WithMessage("Patient full name is required.");
+            .WithMessage("Full name is required.");
 
         RuleFor(x => x.DateOfBirth)
             .NotEmpty()
@@ -20,13 +20,5 @@ public class UpdatePatientValidator : AbstractValidator<UpdatePatientRequest>
         RuleFor(x => x.Gender)
             .NotEmpty()
             .WithMessage("Gender is required.");
-
-        RuleFor(x => x.PhoneNumber)
-            .NotEmpty()
-            .WithMessage("Phone number is required.");
-
-        RuleFor(x => x.Address)
-            .NotEmpty()
-            .WithMessage("Address is required.");
     }
 }

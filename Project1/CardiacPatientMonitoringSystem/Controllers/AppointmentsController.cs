@@ -20,19 +20,19 @@ public class AppointmentsController : ControllerBase
     }
 
     [HttpGet]
-public async Task<IActionResult> GetAll(string? status)
-{
-    var query = _context.Appointments.AsQueryable();
-
-    if (!string.IsNullOrWhiteSpace(status))
+    public async Task<IActionResult> GetAll(string? status)
     {
-        query = query.Where(a => a.Status == status);
+        var query = _context.Appointments.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            query = query.Where(a => a.Status == status);
+        }
+
+        var appointments = await query.ToListAsync();
+
+        return Ok(appointments);
     }
-
-    var appointments = await query.ToListAsync();
-
-    return Ok(appointments);
-}
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
@@ -64,11 +64,22 @@ public async Task<IActionResult> GetAll(string? status)
             });
         }
 
+        var doctorExists = await _context.Doctors
+            .AnyAsync(d => d.Id == request.DoctorId);
+
+        if (!doctorExists)
+        {
+            return NotFound(new
+            {
+                message = $"Doctor with ID {request.DoctorId} was not found."
+            });
+        }
+
         var appointment = new Appointment
         {
             PatientId = request.PatientId,
+            DoctorId = request.DoctorId,
             AppointmentDate = request.AppointmentDate,
-            DoctorName = request.DoctorName,
             Reason = request.Reason,
             Status = request.Status
         };
@@ -109,9 +120,20 @@ public async Task<IActionResult> GetAll(string? status)
             });
         }
 
+        var doctorExists = await _context.Doctors
+            .AnyAsync(d => d.Id == request.DoctorId);
+
+        if (!doctorExists)
+        {
+            return NotFound(new
+            {
+                message = $"Doctor with ID {request.DoctorId} was not found."
+            });
+        }
+
         appointment.PatientId = request.PatientId;
+        appointment.DoctorId = request.DoctorId;
         appointment.AppointmentDate = request.AppointmentDate;
-        appointment.DoctorName = request.DoctorName;
         appointment.Reason = request.Reason;
         appointment.Status = request.Status;
 

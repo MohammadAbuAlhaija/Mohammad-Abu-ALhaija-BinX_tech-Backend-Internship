@@ -11,13 +11,13 @@ public class UpdateAppointmentValidator : AbstractValidator<UpdateAppointmentReq
             .GreaterThan(0)
             .WithMessage("Patient ID must be greater than 0.");
 
+        RuleFor(x => x.DoctorId)
+            .GreaterThan(0)
+            .WithMessage("Doctor ID must be greater than 0.");
+
         RuleFor(x => x.AppointmentDate)
             .NotEmpty()
             .WithMessage("Appointment date is required.");
-
-        RuleFor(x => x.DoctorName)
-            .NotEmpty()
-            .WithMessage("Doctor name is required.");
 
         RuleFor(x => x.Reason)
             .NotEmpty()

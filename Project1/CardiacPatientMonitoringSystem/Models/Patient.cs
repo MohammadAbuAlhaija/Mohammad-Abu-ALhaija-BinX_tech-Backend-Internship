@@ -1,8 +1,13 @@
+using Microsoft.AspNetCore.Identity;
+
 namespace CardiacPatientMonitoringSystem.Models;
 
 public class Patient
 {
     public int Id { get; set; }
+
+    public string UserId { get; set; } = string.Empty;
+    public IdentityUser User { get; set; } = null!;
 
     public string FullName { get; set; } = string.Empty;
 
@@ -10,13 +15,15 @@ public class Patient
 
     public string Gender { get; set; } = string.Empty;
 
-    public string PhoneNumber { get; set; } = string.Empty;
+    public ICollection<PatientPhone> Phones { get; set; } = new List<PatientPhone>();
 
-    public string Address { get; set; } = string.Empty;
+    public ICollection<EmergencyContact> EmergencyContacts { get; set; } = new List<EmergencyContact>();
 
     public ICollection<VitalSign> VitalSigns { get; set; } = new List<VitalSign>();
 
-    public ICollection<Medication> Medications { get; set; } = new List<Medication>();
+    public ICollection<PatientMedication> PatientMedications { get; set; } = new List<PatientMedication>();
 
     public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+
+    public ICollection<MedicalRecord> MedicalRecords { get; set; } = new List<MedicalRecord>();
 }

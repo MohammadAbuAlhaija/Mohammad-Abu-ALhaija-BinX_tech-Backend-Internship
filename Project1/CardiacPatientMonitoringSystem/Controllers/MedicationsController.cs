@@ -23,6 +23,7 @@ public class MedicationsController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var medications = await _context.Medications.ToListAsync();
+
         return Ok(medications);
     }
 
@@ -45,25 +46,10 @@ public class MedicationsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(CreateMedicationRequest request)
     {
-        var patientExists = await _context.Patients
-            .AnyAsync(p => p.Id == request.PatientId);
-
-        if (!patientExists)
-        {
-            return NotFound(new
-            {
-                message = $"Patient with ID {request.PatientId} was not found."
-            });
-        }
-
         var medication = new Medication
         {
-            PatientId = request.PatientId,
             Name = request.Name,
-            Dosage = request.Dosage,
-            Frequency = request.Frequency,
-            StartDate = request.StartDate,
-            EndDate = request.EndDate
+            Description = request.Description
         };
 
         _context.Medications.Add(medication);
@@ -91,23 +77,8 @@ public class MedicationsController : ControllerBase
             });
         }
 
-        var patientExists = await _context.Patients
-            .AnyAsync(p => p.Id == request.PatientId);
-
-        if (!patientExists)
-        {
-            return NotFound(new
-            {
-                message = $"Patient with ID {request.PatientId} was not found."
-            });
-        }
-
-        medication.PatientId = request.PatientId;
         medication.Name = request.Name;
-        medication.Dosage = request.Dosage;
-        medication.Frequency = request.Frequency;
-        medication.StartDate = request.StartDate;
-        medication.EndDate = request.EndDate;
+        medication.Description = request.Description;
 
         await _context.SaveChangesAsync();
 

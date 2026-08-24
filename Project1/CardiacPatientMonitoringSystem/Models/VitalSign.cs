@@ -13,5 +13,6 @@ public class VitalSign
     public int DiastolicBloodPressure { get; set; }
 
     public DateTime MeasuredAt { get; set; }
+
     public Patient Patient { get; set; } = null!;
 }

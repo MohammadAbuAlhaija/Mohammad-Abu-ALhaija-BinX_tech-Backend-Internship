@@ -51,11 +51,10 @@ public class PatientsController : ControllerBase
     {
         var patient = new Patient
         {
+            UserId = request.UserId,
             FullName = request.FullName,
             DateOfBirth = request.DateOfBirth,
-            Gender = request.Gender,
-            PhoneNumber = request.PhoneNumber,
-            Address = request.Address
+            Gender = request.Gender
         };
 
         _context.Patients.Add(patient);
@@ -87,8 +86,6 @@ public class PatientsController : ControllerBase
         patient.FullName = request.FullName;
         patient.DateOfBirth = request.DateOfBirth;
         patient.Gender = request.Gender;
-        patient.PhoneNumber = request.PhoneNumber;
-        patient.Address = request.Address;
 
         await _context.SaveChangesAsync();
 
@@ -114,5 +111,4 @@ public class PatientsController : ControllerBase
 
         return NoContent();
     }
-
 }

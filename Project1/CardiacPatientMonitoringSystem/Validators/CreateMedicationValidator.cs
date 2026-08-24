@@ -7,24 +7,12 @@ public class CreateMedicationValidator : AbstractValidator<CreateMedicationReque
 {
     public CreateMedicationValidator()
     {
-        RuleFor(x => x.PatientId)
-            .GreaterThan(0)
-            .WithMessage("Patient ID must be greater than 0.");
-
         RuleFor(x => x.Name)
             .NotEmpty()
             .WithMessage("Medication name is required.");
 
-        RuleFor(x => x.Dosage)
-            .NotEmpty()
-            .WithMessage("Dosage is required.");
-
-        RuleFor(x => x.Frequency)
-            .NotEmpty()
-            .WithMessage("Frequency is required.");
-
-        RuleFor(x => x.StartDate)
-            .NotEmpty()
-            .WithMessage("Start date is required.");
+        RuleFor(x => x.Description)
+            .MaximumLength(500)
+            .WithMessage("Description must not exceed 500 characters.");
     }
 }

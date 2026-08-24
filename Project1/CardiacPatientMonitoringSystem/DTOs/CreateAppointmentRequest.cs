@@ -4,9 +4,9 @@ public class CreateAppointmentRequest
 {
     public int PatientId { get; set; }
 
-    public DateTime AppointmentDate { get; set; }
+    public int DoctorId { get; set; }
 
-    public string DoctorName { get; set; } = string.Empty;
+    public DateTime AppointmentDate { get; set; }
 
     public string Reason { get; set; } = string.Empty;
 

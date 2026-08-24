@@ -1,6 +1,6 @@
 namespace CardiacPatientMonitoringSystem.Models;
 
-public class Medication
+public class Department
 {
     public int Id { get; set; }
 
@@ -8,6 +8,5 @@ public class Medication
 
     public string? Description { get; set; }
 
-    public ICollection<PatientMedication> PatientMedications { get; set; }
-        = new List<PatientMedication>();
+    public ICollection<Doctor> Doctors { get; set; } = new List<Doctor>();
 }

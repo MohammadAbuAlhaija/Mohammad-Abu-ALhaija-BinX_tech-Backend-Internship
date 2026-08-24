@@ -7,9 +7,13 @@ public class CreatePatientValidator : AbstractValidator<CreatePatientRequest>
 {
     public CreatePatientValidator()
     {
+        RuleFor(x => x.UserId)
+            .NotEmpty()
+            .WithMessage("User ID is required.");
+
         RuleFor(x => x.FullName)
             .NotEmpty()
-            .WithMessage("Patient full name is required.");
+            .WithMessage("Full name is required.");
 
         RuleFor(x => x.DateOfBirth)
             .NotEmpty()
@@ -20,13 +24,5 @@ public class CreatePatientValidator : AbstractValidator<CreatePatientRequest>
         RuleFor(x => x.Gender)
             .NotEmpty()
             .WithMessage("Gender is required.");
-
-        RuleFor(x => x.PhoneNumber)
-            .NotEmpty()
-            .WithMessage("Phone number is required.");
-
-        RuleFor(x => x.Address)
-            .NotEmpty()
-            .WithMessage("Address is required.");
     }
 }
