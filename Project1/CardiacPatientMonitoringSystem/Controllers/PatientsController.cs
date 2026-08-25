@@ -19,14 +19,60 @@ public class PatientsController : ControllerBase
         _context = context;
     }
 
-    // GET: api/patients
-    [HttpGet]
-    public async Task<IActionResult> GetAll()
-    {
-        var patients = await _context.Patients.ToListAsync();
+// GET: api/patients
+[HttpGet]
+public async Task<IActionResult> GetAll(
+    int page = 1,
+    int pageSize = 10,
+    string? name = null,
+    string? gender = null,
+    string? sort = null)
+{
+    var query = _context.Patients.AsQueryable();
 
-        return Ok(patients);
+    // Filtering
+    if (!string.IsNullOrWhiteSpace(name))
+    {
+        query = query.Where(p => p.FullName.Contains(name));
     }
+
+    if (!string.IsNullOrWhiteSpace(gender))
+    {
+        query = query.Where(p => p.Gender == gender);
+    }
+
+    var totalCount = await query.CountAsync();
+
+    // Sorting
+    query = sort switch
+    {
+        "name_desc" => query.OrderByDescending(p => p.FullName),
+        "birthdate_asc" => query.OrderBy(p => p.DateOfBirth),
+        "birthdate_desc" => query.OrderByDescending(p => p.DateOfBirth),
+        _ => query.OrderBy(p => p.FullName)
+    };
+
+    // Pagination + DTO Projection
+    var patients = await query
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .Select(p => new PatientResponse
+        {
+            Id = p.Id,
+            FullName = p.FullName,
+            DateOfBirth = p.DateOfBirth,
+            Gender = p.Gender
+        })
+        .ToListAsync();
+
+    return Ok(new
+    {
+        page,
+        pageSize,
+        totalCount,
+        data = patients
+    });
+}
 
     // GET: api/patients/1
     [HttpGet("{id}")]
