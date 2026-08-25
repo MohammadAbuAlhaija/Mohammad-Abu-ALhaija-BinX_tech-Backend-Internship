@@ -1,0 +1,250 @@
+{
+  "info": {
+    "_postman_id": "c5a97722-5f57-4bf9-8813-8f187c9243c0",
+    "name": "Week 6 Day 3 - Catalog & Read Operations",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "56986320",
+    "_collection_link": "https://go.postman.co/collection/56986320-c5a97722-5f57-4bf9-8813-8f187c9243c0?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/auth/register?email=day3user@example.com&password=Test123!",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "day3user@example.com"
+                },
+                {
+                  "key": "password",
+                  "value": "Test123!"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "login",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Patients",
+      "item": [
+        {
+          "name": "Get Patients - Pagination",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "Get Patients - Filter by Name",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_secret_00o9}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/patients?name=Ahmad",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "patients"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "Ahmad"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Patients - Filter by Gender",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{supabase_service_role_api_key_00o9}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/patients?gender=Male",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "patients"
+              ],
+              "query": [
+                {
+                  "key": "gender",
+                  "value": "Male"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Patients - Combined Filters",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{json_web_token_00o9}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/patients?page=1&pageSize=5&name=Ahmad&gender=Male",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "patients"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "5"
+                },
+                {
+                  "key": "name",
+                  "value": "Ahmad"
+                },
+                {
+                  "key": "gender",
+                  "value": "Male"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Patients - Sort Name Desc",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_secret_0ek0}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/patients?sort=name_desc",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "patients"
+              ],
+              "query": [
+                {
+                  "key": "sort",
+                  "value": "name_desc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Patients - Sort Birthdate Asc",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "auth_secret_00o9",
+      "secret": true
+    },
+    {
+      "key": "json_web_token_00o9",
+      "secret": true
+    },
+    {
+      "key": "supabase_service_role_api_key_00o9",
+      "secret": true
+    },
+    {
+      "key": "auth_secret_0ek0",
+      "secret": true
+    }
+  ]
+}
