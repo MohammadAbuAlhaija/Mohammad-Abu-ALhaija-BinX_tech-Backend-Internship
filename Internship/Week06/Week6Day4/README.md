@@ -319,23 +319,54 @@ The exported collection is stored inside the Day 4 folder.
 
 ---
 
+## Pull Request & Code Review
+
+After completing the implementation and verifying the project locally, I pushed the feature branch to GitHub and opened a Pull Request into `main`.
+
+The feature was developed on:
+
+```text
+feature/patient-visit-business-logic
+```
+
+The Pull Request includes the Patient Visit business logic, transaction handling, Doctor API support, updated tests, Postman testing, and documentation.
+
+I also highlighted the main areas where code-review feedback would be useful:
+
+- `PatientVisitService` business logic
+- EF Core transaction boundary
+- Controller/service separation
+- Validation and error handling
+
+### Pull Request
+
+![Week 6 Day 4 Pull Request](./Screenshots/week6-day4-pull-request-opened.png)
+
+The Pull Request was left open for review instead of being merged immediately.
+
+---
+
 ## Day 4 Result
 
 By the end of the day, I had:
 
-- Implemented a write operation with business logic beyond simple CRUD
-- Created a dedicated patient visit DTO and validator
-- Moved the main workflow into a service class
+- Implemented a patient visit operation with real business logic
+- Added `PatientVisitService`
+- Added a dedicated request DTO and validator
+- Added initial Doctor API support
 - Added patient and doctor existence checks
-- Added a business rule preventing future vital-sign measurements
-- Created a medical record and vital sign as part of one operation
-- Wrapped the database operation in an EF Core transaction
-- Added the Patient Visits endpoint
-- Added the initial Doctor API support needed by the V2 workflow
-- Tested the workflow in Postman
-- Documented successful and rejected requests with screenshots
-- Updated older automated tests to match the V2 data model
-- Verified all 13 automated tests pass
-- Worked on a dedicated feature branch in preparation for code review
+- Added a business rule preventing future measurement dates
+- Created `MedicalRecord` and `VitalSign` as part of one operation
+- Wrapped the multi-step operation in an EF Core transaction
+- Tested successful and rejected requests in Postman
+- Verified that the Vital Sign was actually created
+- Updated older automated tests to match V2
+- Verified all **13 automated tests pass**
+- Exported the Day 4 Postman collection
+- Documented the work with screenshots
+- Worked on a dedicated feature branch
+- Pushed the branch to GitHub
+- Opened a Pull Request into `main`
+- Left the Pull Request open for code review
 
-The next step is to finalize the branch, push it to GitHub, open a clean pull request, and request mentor review.
+This was the first V2 workflow that combined business rules, multiple database writes, a service layer, and explicit transaction handling in one operation.

@@ -1124,24 +1124,38 @@ This confirmed that the existing automated testing layer remained successful aft
 
 ---
 
-# Preparing the Feature for Code Review
+# Pull Request & Code Review
 
-The patient visit work was developed on a dedicated Git branch:
+After completing the Patient Visit implementation and verifying the project locally, I pushed the feature branch to GitHub and opened a Pull Request into `main`.
+
+The work was developed on:
 
 ```text
 feature/patient-visit-business-logic
 ```
 
-Before preparing the branch for review, the project was verified with both:
+Before opening the Pull Request, the automated test suite was executed successfully with:
 
-```bash
-dotnet build
-dotnet test
+```text
+Total: 13
+Succeeded: 13
+Failed: 0
+Skipped: 0
 ```
 
-The branch is being kept focused on the new write operation, its supporting API changes, updated tests, and documentation before being submitted through a Pull Request.
+The Pull Request summarizes the V2 changes and highlights the main areas where code-review feedback would be useful:
 
----
+- `PatientVisitService` business logic
+- EF Core transaction boundary
+- Controller/service separation
+- Validation and error handling
+
+## Pull Request
+
+![Patient Visit Business Logic Pull Request](./Screenshots/week6-day4-pull-request-opened.png)
+
+The Pull Request was intentionally left open for review rather than being merged immediately.
+
 ---
 
 # V2 Progress So Far
