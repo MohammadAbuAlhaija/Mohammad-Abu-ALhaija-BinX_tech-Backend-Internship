@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using CardiacPatientMonitoringSystem.Services;
 using Microsoft.OpenApi;
 using System.Text;
 
@@ -55,6 +56,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection")
     )
 );
+
+// Application Services
+builder.Services.AddScoped<PatientVisitService>();
 
 // Identity
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()

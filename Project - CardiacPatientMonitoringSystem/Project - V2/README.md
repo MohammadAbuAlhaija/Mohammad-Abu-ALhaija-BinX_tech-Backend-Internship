@@ -829,6 +829,321 @@ The same route can therefore handle browsing, filtering, sorting, and pagination
 
 ---
 
+# Business Logic & Transactional Write Operations
+
+After improving the read side of the API, the next step in V2 was to move beyond simple CRUD operations and introduce a write operation with real business logic.
+
+Instead of using the generic order and stock example from the lesson, I adapted the same concept to the healthcare domain of the project by implementing a **Patient Visit** workflow.
+
+A patient visit now combines clinical information that needs to be stored across more than one part of the system.
+
+---
+
+## Patient Visit Request
+
+I created a dedicated request DTO:
+
+```text
+CreatePatientVisitRequest
+```
+
+The request contains:
+
+- Patient ID
+- Doctor ID
+- Diagnosis
+- Notes
+- Heart rate
+- Systolic blood pressure
+- Diastolic blood pressure
+- Measurement date
+
+A dedicated `CreatePatientVisitValidator` was also added to validate the basic request data before the business operation is executed.
+
+This keeps the API contract separate from the database entities and gives the patient visit operation its own clear input model.
+
+---
+
+# Patient Visit Service
+
+The main business logic was moved into:
+
+```text
+PatientVisitService
+```
+
+Instead of placing the entire operation inside a controller, the service handles the workflow and database interaction.
+
+Before creating anything, it checks that:
+
+- The Patient exists
+- The Doctor exists
+- The vital-sign measurement is not dated in the future
+
+The workflow follows this structure:
+
+```text
+Create Patient Visit
+        │
+        ▼
+Check Patient
+        │
+        ▼
+Check Doctor
+        │
+        ▼
+Apply Business Rules
+        │
+        ▼
+Begin Transaction
+        │
+        ├── Create MedicalRecord
+        │
+        └── Create VitalSign
+        │
+        ▼
+Save Changes
+        │
+        ▼
+Commit
+```
+
+If an exception occurs while processing the database operation, the transaction is rolled back.
+
+This keeps the write operation consistent instead of allowing part of the visit to be saved while another part fails.
+
+---
+
+# EF Core Transaction
+
+The patient visit operation performs multiple related database writes.
+
+One request creates both:
+
+```text
+MedicalRecord
+VitalSign
+```
+
+These changes are wrapped inside an explicit EF Core transaction:
+
+```csharp
+await using var transaction =
+    await _context.Database.BeginTransactionAsync();
+
+try
+{
+    _context.MedicalRecords.Add(medicalRecord);
+    _context.VitalSigns.Add(vitalSign);
+
+    await _context.SaveChangesAsync();
+
+    await transaction.CommitAsync();
+}
+catch
+{
+    await transaction.RollbackAsync();
+    throw;
+}
+```
+
+This introduced a clear transaction boundary around the patient visit workflow and provided practical experience with multi-step write operations.
+
+---
+
+# Patient Visits API
+
+A new controller was introduced:
+
+```text
+PatientVisitsController
+```
+
+with the endpoint:
+
+```http
+POST /api/patientvisits
+```
+
+The controller remains small and delegates the main work to `PatientVisitService`.
+
+Conceptually, the request now follows:
+
+```text
+HTTP Request
+     │
+     ▼
+PatientVisitsController
+     │
+     ▼
+PatientVisitService
+     │
+     ▼
+Business Rules
+     │
+     ▼
+EF Core Transaction
+     │
+     ├── MedicalRecord
+     └── VitalSign
+```
+
+This is an important improvement over putting database and business logic directly inside the controller.
+
+---
+
+## Successful Patient Visit
+
+The new operation was tested through Postman with an existing Patient and Doctor.
+
+The request successfully completed the visit workflow and returned:
+
+```text
+200 OK
+```
+
+![Successful Patient Visit](./Screenshots/week6-day4-patient-visit-success.png)
+
+---
+
+## Verifying the Database Write
+
+After the visit was created, the Vital Signs API was used to verify that the measurements supplied in the patient visit request were actually stored.
+
+The created record contained the expected heart rate and blood pressure values.
+
+![Patient Visit Vital Sign](./Screenshots/week6-day4-visit-vitalsign-created.png)
+
+This confirmed that the successful response represented an actual database write.
+
+---
+
+# Business Rule Verification
+
+The patient visit operation also includes business logic that prevents a vital-sign measurement from being recorded with a future date.
+
+A request containing a future `MeasuredAt` value was tested through Postman.
+
+The API correctly rejected the operation with:
+
+```text
+400 Bad Request
+```
+
+and returned:
+
+```text
+Measurement date cannot be in the future.
+```
+
+![Future Measurement Rejected](./Screenshots/week6-day4-future-measurement-rejected.png)
+
+This demonstrates that the new endpoint performs domain-related checks rather than simply mapping incoming fields to database entities.
+
+---
+
+# Initial Doctor API Support
+
+The expanded V2 database already included the `Doctor` entity, but the API layer did not yet provide a way to create doctors.
+
+To support the new patient visit workflow, I introduced:
+
+```text
+DoctorsController
+CreateDoctorRequest
+CreateDoctorValidator
+```
+
+Doctor creation checks that:
+
+- The Identity user exists
+- The Department exists
+- The Supervisor exists when one is provided
+- The same Identity user is not already assigned to another Doctor record
+
+The existing seeded `Cardiology` department was used while preparing the doctor required for the patient visit tests.
+
+This is also the first step toward bringing the API layer in line with the larger V2 domain model.
+
+---
+
+# Identity Registration Improvement
+
+The existing registration endpoint was slightly improved for the expanded V2 model.
+
+Previously, successful registration returned only a message.
+
+It now also returns the generated Identity user ID:
+
+```json
+{
+  "message": "User registered successfully.",
+  "userId": "..."
+}
+```
+
+This makes it easier to connect newly registered Identity users to domain records such as Patients and Doctors.
+
+---
+
+# Updating Automated Tests for V2
+
+Before preparing the new work for code review, I ran the existing automated test suite.
+
+Some tests were still based on the older V1 Patient model and referenced fields such as:
+
+```text
+PhoneNumber
+Address
+```
+
+Those tests were updated to match the normalized V2 model.
+
+The integration-test setup was also updated so that its isolated in-memory database explicitly creates the Patient required by `PatientsApiTests`.
+
+This keeps the tests independent from the real development database and gives them predictable data.
+
+---
+
+## Final Automated Test Result
+
+After updating the affected tests, the complete test suite was executed again.
+
+The final result was:
+
+```text
+Total: 13
+Succeeded: 13
+Failed: 0
+Skipped: 0
+```
+
+![All V2 Tests Passed](./Screenshots/week6-day4-all-tests-passed.png)
+
+This confirmed that the existing automated testing layer remained successful after the new V2 changes.
+
+---
+
+# Preparing the Feature for Code Review
+
+The patient visit work was developed on a dedicated Git branch:
+
+```text
+feature/patient-visit-business-logic
+```
+
+Before preparing the branch for review, the project was verified with both:
+
+```bash
+dotnet build
+dotnet test
+```
+
+The branch is being kept focused on the new write operation, its supporting API changes, updated tests, and documentation before being submitted through a Pull Request.
+
+---
+---
+
 # V2 Progress So Far
 
 Version 2 currently builds on the original project in several important areas.
@@ -866,6 +1181,13 @@ Version 2 currently builds on the original project in several important areas.
 - Used `IQueryable` to build queries dynamically
 - Added DTO projection
 - Reduced unnecessary data retrieval
+- Added the Patient Visits business operation
+- Added `PatientVisitService`
+- Added the initial Doctors API
+- Added business-rule validation for patient visits
+- Added multi-step database writes
+- Added EF Core transaction handling
+- Improved Identity registration to return the generated User ID
 
 ### Verification
 
@@ -873,6 +1195,12 @@ Version 2 currently builds on the original project in several important areas.
 - Verified the database through SSMS
 - Tested API behavior through Postman
 - Saved screenshots for the important V2 changes
+- Tested successful patient visit creation
+- Tested business-rule rejection
+- Verified the created Vital Sign
+- Updated older tests to match the V2 model
+- Verified all 13 automated tests pass
+
 
 ---
 
@@ -938,6 +1266,10 @@ The project still keeps the testing, middleware, authentication, validation, and
 
 The project is intentionally being improved incrementally rather than implementing every planned feature at once.
 
-So far, V2 has moved the project from the simpler V1 database model into a more complete normalized domain model and has started improving the API read operations with pagination, filtering, sorting, and DTO projection.
+So far, V2 has moved the project from the simpler V1 database model into a more complete normalized domain model, improved read operations with pagination, filtering, sorting, and DTO projection, and has now started introducing more structured write operations with dedicated services, business rules, and database transactions.
 
-The next sections of this README will be added as new V2 features are implemented and tested.
+The Patient Visit workflow is the first V2 operation that coordinates multiple database changes as one business process.
+
+The API layer is also gradually being expanded to support the larger V2 domain model, starting with Doctors and Patient Visits.
+
+The next sections of this README will continue to be added as new V2 features are implemented, tested, and reviewed.

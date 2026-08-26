@@ -1,0 +1,360 @@
+{
+  "info": {
+    "_postman_id": "4ab3ca76-5055-4cd5-9fc9-1c5e1e061cd8",
+    "name": "Week 6 Day 4 - Write Operations & Business Logic",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "56986320",
+    "_collection_link": "https://go.postman.co/collection/56986320-4ab3ca76-5055-4cd5-9fc9-1c5e1e061cd8?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register Doctor User",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/auth/register?email=doctor.day4@example.com&password=Test123!",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "doctor.day4@example.com"
+                },
+                {
+                  "key": "password",
+                  "value": "Test123!"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login Day 4",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/auth/login?email=doctor.day4@example.com&password=Test123!",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "doctor.day4@example.com"
+                },
+                {
+                  "key": "password",
+                  "value": "Test123!"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register Patient User",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/auth/register?email=patient.day4@example.com&password=Test123!",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "patient.day4@example.com"
+                },
+                {
+                  "key": "password",
+                  "value": "Test123!"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Doctors",
+      "item": [
+        {
+          "name": "Create Doctor",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{supabase_service_role_api_key_0m8c}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"userId\": \"6b5e6959-4962-4808-9bed-43c8e6a4a8e5\",\r\n  \"departmentId\": 1,\r\n  \"supervisorId\": null,\r\n  \"fullName\": \"Dr. Ahmad Khalil\",\r\n  \"specialization\": \"Cardiology\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5075/api/doctors",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "doctors"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Patients",
+      "item": [
+        {
+          "name": "Get Patients",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_secret_0m8c}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/patients?page=1&pageSize=10",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "patients"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Patient",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_secret_0m8c}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"userId\": \"40572165-14e5-4d30-b72b-c4a2f130e926\",\r\n  \"fullName\": \"Mohammad Ahmad\",\r\n  \"dateOfBirth\": \"1998-05-15\",\r\n  \"gender\": \"Male\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5075/api/patients",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "patients"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Patient",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_secret_0m8c}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/patients/1002",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "patients",
+                "1002"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Patient Visits",
+      "item": [
+        {
+          "name": "Create Patient Visit - Success",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{supabase_service_role_api_key_0m8c}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"patientId\": 1003,\r\n  \"doctorId\": 1,\r\n  \"diagnosis\": \"Stable cardiac condition\",\r\n  \"notes\": \"Routine follow-up visit.\",\r\n  \"heartRate\": 78,\r\n  \"systolicBloodPressure\": 120,\r\n  \"diastolicBloodPressure\": 80,\r\n  \"measuredAt\": \"2026-08-26T10:00:00\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5075/api/patientvisits",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "patientvisits"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Visit Vital Sign",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_secret_0m8c}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/vitalsigns",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "vitalsigns"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Patient Visit - Future Date Rejected",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "auth_secret_0m8c",
+      "secret": true
+    },
+    {
+      "key": "supabase_service_role_api_key_0m8c",
+      "secret": true
+    }
+  ]
+}

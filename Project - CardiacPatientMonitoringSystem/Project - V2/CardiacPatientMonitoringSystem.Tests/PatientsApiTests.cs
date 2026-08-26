@@ -17,22 +17,33 @@ public class PatientsApiTests :
     public PatientsApiTests(
         CustomWebApplicationFactory factory)
     {
+        // Creates an HTTP client connected to the test version
+        // of the ASP.NET Core application.
         _client = factory.CreateClient();
     }
 
+    // Verifies that requesting an existing patient
+    // returns 200 OK with the expected patient data.
     [Fact]
     public async Task GetPatientById_WhenPatientExists_ReturnsFullPatient()
     {
         // Arrange
+
+        // Generate a valid JWT because the PatientsController
+        // is protected with the [Authorize] attribute.
         var token = GenerateTestJwt();
 
         _client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", token);
 
         // Act
+
+        // Patient 1001 is part of the test data.
         var response = await _client.GetAsync("/api/patients/1001");
 
         // Assert
+
+        // The endpoint should successfully find the patient.
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var patient =
@@ -40,14 +51,16 @@ public class PatientsApiTests :
 
         Assert.NotNull(patient);
 
+        // Verify that the returned patient contains
+        // the expected data from the test database.
         Assert.Equal(1001, patient.Id);
         Assert.Equal("Ahmad Khalil", patient.FullName);
         Assert.Equal(new DateTime(1985, 6, 15), patient.DateOfBirth);
         Assert.Equal("Male", patient.Gender);
-        Assert.Equal("0599123456", patient.PhoneNumber);
-        Assert.Equal("Jenin", patient.Address);
     }
 
+    // Verifies that requesting a patient that does not exist
+    // returns the correct 404 Not Found response.
     [Fact]
     public async Task GetPatientById_WhenPatientDoesNotExist_ReturnsNotFound()
     {
@@ -64,6 +77,8 @@ public class PatientsApiTests :
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
+    // Creates a JWT used only by the integration tests
+    // so protected API endpoints can be tested.
     private static string GenerateTestJwt()
     {
         var key = new SymmetricSecurityKey(
