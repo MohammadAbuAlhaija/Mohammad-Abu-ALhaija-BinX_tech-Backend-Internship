@@ -1154,7 +1154,214 @@ The Pull Request summarizes the V2 changes and highlights the main areas where c
 
 ![Patient Visit Business Logic Pull Request](./Screenshots/week6-day4-pull-request-opened.png)
 
-The Pull Request was intentionally left open for review rather than being merged immediately.
+The Pull Request was reviewed and approved by the mentor before being merged into `main`.
+
+After the merge, the local `main` branch was updated to include the approved Sprint 1 changes.
+
+---
+# Sprint 1 Review & Demo
+
+After completing the main Sprint 1 implementation, I closed the sprint with a final review and a live Postman demo of the Version 2 API.
+
+The demo covered the main workflow from authentication to the new business operation:
+
+```text
+Register User
+      ↓
+Login & Generate JWT
+      ↓
+Browse Patients
+      ↓
+Apply Filtering & Sorting
+      ↓
+Create Patient Visit
+      ↓
+Verify Created Vital Sign
+      ↓
+Test Business Rule Error Case
+```
+
+---
+
+## Patients Catalog Demo
+
+The improved Patients endpoint was demonstrated using pagination.
+
+![Patients Catalog Demo](./Screenshots/week6-day5-patients-catalog-demo.png)
+
+Filtering and sorting were also tested together to demonstrate the dynamic query behavior.
+
+![Patients Filter and Sort](./Screenshots/week6-day5-patients-filter-sort-demo.png)
+
+---
+
+## Patient Visit Demo
+
+A complete Patient Visit was created successfully through Postman.
+
+![Patient Visit Success](./Screenshots/week6-day5-patient-visit-success.png)
+
+After creating the visit, the Vital Signs endpoint was used to verify that the new measurement was actually stored.
+
+![Patient Visit Verified](./Screenshots/week6-day5-patient-visit-verified.png)
+
+The result showed both the previous measurement and the new measurement created by the Patient Visit workflow for the same patient.
+
+---
+
+## Business Rule Demo
+
+The Patient Visit workflow was also tested with a future measurement date.
+
+The API correctly rejected the request, confirming that the business rule implemented inside `PatientVisitService` was still being enforced.
+
+![Future Measurement Rejected](./Screenshots/week6-day5-future-measurement-demo.png)
+
+---
+
+# Sprint 1 Backlog Review
+
+At the end of Sprint 1, I reviewed the backlog against the sprint acceptance criteria.
+
+Tasks that were fully completed were marked as **Done**.
+
+Work that still requires further implementation or verification was kept in the project backlog instead of being counted as completed.
+
+The remaining areas include:
+
+- Complete Doctor API functionality and authorization.
+- Implement Department API routes.
+- Complete Appointment support for the Doctor relationship.
+- Complete the Medication and PatientMedication workflow.
+- Expand automated test coverage for the updated core routes.
+- Perform another database and ERD consistency review after the remaining API work is completed.
+
+These items remain part of the continuing Version 2 development.
+
+---
+
+# Sprint Retrospective
+
+Sprint 1 helped move the project toward a more structured development process.
+
+Instead of adding features independently, the sprint followed a clearer flow:
+
+```text
+Planning
+   ↓
+Database Design
+   ↓
+Implementation
+   ↓
+API Development
+   ↓
+Testing
+   ↓
+Code Review
+   ↓
+Sprint Review
+```
+
+## What Went Well
+
+Several parts of the sprint worked particularly well:
+
+- The database was redesigned before implementing the new model.
+- The ERD provided a clear reference for the EF Core implementation.
+- The Patients API was improved without creating unnecessary separate endpoints.
+- Business logic was moved from the controller into `PatientVisitService`.
+- A transaction was used for the multi-step Patient Visit operation.
+- Postman was used throughout development to verify API behavior.
+- Existing automated tests helped identify compatibility issues after the V2 model changes.
+- The final automated test run completed with all 13 tests passing.
+- The feature branch and Pull Request provided a cleaner review workflow.
+
+## What Could Be Improved
+
+One issue discovered during the sprint was that some existing automated tests were not updated immediately after the Patient model changed.
+
+Those tests still expected older V1 fields such as:
+
+```text
+PhoneNumber
+Address
+```
+
+This was only discovered later when the complete test suite was executed.
+
+Some parts of the API layer also still need to catch up with the larger V2 database model.
+
+## Concrete Action for the Next Development Cycle
+
+After changing an important domain model, DTO, or database relationship, I will use the following workflow:
+
+```text
+Model / DTO / Relationship Change
+              ↓
+            Build
+              ↓
+     Run Automated Tests
+              ↓
+       Fix Any Failures
+              ↓
+     Continue Development
+```
+
+This should help detect compatibility problems earlier while the project continues to evolve.
+
+---
+
+# Migration History
+
+At the end of Sprint 1, I reviewed the complete EF Core migration history:
+
+```text
+20260814163131_InitialCreate
+20260814203502_AddIdentity
+20260815043443_AddSeedData
+20260824090330_BuildFullDataModel
+```
+
+This shows the progression from the original database foundation through Identity, seed data, and finally the expanded Version 2 model.
+
+---
+
+# Sprint 1 Code Review Result
+
+The Patient Visit feature was developed on:
+
+```text
+feature/patient-visit-business-logic
+```
+
+The Pull Request was reviewed and approved by the mentor.
+
+After approval, the feature was merged into `main` and the local `main` branch was updated successfully.
+
+There was no unresolved mentor code-review feedback remaining after the review.
+
+---
+
+# Planned V2 Improvements
+
+Sprint 1 also exposed several areas that can make the project more complete.
+
+One important improvement is a clearer authentication and authorization model for:
+
+```text
+Admin
+Doctor
+Patient
+```
+
+The goal is to ensure that each authenticated user is linked to the correct domain entity and receives only the permissions appropriate for that user type.
+
+This should also prevent clients from simply supplying identity-related IDs that do not belong to the authenticated account.
+
+Other remaining V2 work includes completing the API layer for resources that are already represented in the expanded database model.
+
+These improvements are part of the continuing V2 development and are not yet considered completed functionality.
+
 
 ---
 
