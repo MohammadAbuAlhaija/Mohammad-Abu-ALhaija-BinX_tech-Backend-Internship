@@ -1,4 +1,5 @@
 using CardiacPatientMonitoringSystem.Data;
+using CardiacPatientMonitoringSystem.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +18,7 @@ public class CustomWebApplicationFactory
     {
         builder.ConfigureTestServices(services =>
         {
-            // Remove the real AppDbContext registration
+            // Remove the real SQL Server AppDbContext registration.
             services.RemoveAll<AppDbContext>();
             services.RemoveAll<DbContextOptions<AppDbContext>>();
             services.RemoveAll<
@@ -25,6 +26,7 @@ public class CustomWebApplicationFactory
             >();
 
             // Register an isolated in-memory database
+            // specifically for integration tests.
             services.AddDbContext<AppDbContext>(options =>
             {
                 options.UseInMemoryDatabase(
@@ -41,8 +43,25 @@ public class CustomWebApplicationFactory
             var context = scope.ServiceProvider
                 .GetRequiredService<AppDbContext>();
 
+            // Start every integration test environment
+            // with a clean database.
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
+
+            // Seed a patient that matches the current V2 model.
+            // This patient is used by PatientsApiTests.
+            context.Patients.Add(
+                new Patient
+                {
+                    Id = 1001,
+                    UserId = "integration-test-user",
+                    FullName = "Ahmad Khalil",
+                    DateOfBirth = new DateTime(1985, 6, 15),
+                    Gender = "Male"
+                }
+            );
+
+            context.SaveChanges();
         });
     }
 }

@@ -49,9 +49,10 @@ public class AuthController : ControllerBase
         }
 
         return Ok(new
-        {
-            message = "User registered successfully."
-        });
+                 {
+                   message = "User registered successfully.",
+                   userId = user.Id
+                 });
     }
 
     [HttpPost("login")]
