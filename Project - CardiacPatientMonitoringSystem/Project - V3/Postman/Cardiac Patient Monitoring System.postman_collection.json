@@ -1,0 +1,818 @@
+{
+  "info": {
+    "_postman_id": "0ee80da0-4269-4126-a7cc-f8c63d97f9a8",
+    "name": "Cardiac Patient Monitoring System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "56986320",
+    "_collection_link": "https://go.postman.co/collection/56986320-0ee80da0-4269-4126-a7cc-f8c63d97f9a8?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Vital Signs",
+      "item": [
+        {
+          "name": "Create Vital Sign",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"patientId\": 2,\r\n  \"heartRate\": 78,\r\n  \"systolicBloodPressure\": 120,\r\n  \"diastolicBloodPressure\": 80,\r\n  \"measuredAt\": \"2026-08-14T19:30:00\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5075/api/vitalsigns",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "vitalsigns"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Vital Signs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/vitalsigns",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "vitalsigns"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vital Sign By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/vitalsigns/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "vitalsigns",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Vital Sign",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"patientId\": 2,\r\n  \"heartRate\": 82,\r\n  \"systolicBloodPressure\": 125,\r\n  \"diastolicBloodPressure\": 83,\r\n  \"measuredAt\": \"2026-08-14T20:00:00\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5075/api/vitalsigns/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "vitalsigns",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Vital Sign",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/vitalsigns/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "vitalsigns",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Seeded Vital Signs",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{supabase_service_role_api_key_02li}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/vitalsigns",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "vitalsigns"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Medications",
+      "item": [
+        {
+          "name": "Create Medication",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"patientId\": 2,\r\n  \"name\": \"Aspirin\",\r\n  \"dosage\": \"81 mg\",\r\n  \"frequency\": \"Once daily\",\r\n  \"startDate\": \"2026-08-01\",\r\n  \"endDate\": null\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5075/api/medications",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "medications"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Medications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/medications",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "medications"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Medication By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/medications/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "medications",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Medication",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"patientId\": 2,\r\n  \"name\": \"Aspirin\",\r\n  \"dosage\": \"81 mg\",\r\n  \"frequency\": \"Twice daily\",\r\n  \"startDate\": \"2026-08-01\",\r\n  \"endDate\": null\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5075/api/medications/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "medications",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Medication",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/medications/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "medications",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Patients",
+      "item": [
+        {
+          "name": "Create Patient",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"fullName\": \"Ahmad Khalil\",\r\n  \"dateOfBirth\": \"1985-06-15\",\r\n  \"gender\": \"Male\",\r\n  \"phoneNumber\": \"0599123456\",\r\n  \"address\": \"Jenin\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5075/api/patients",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "patients"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Patients",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/patients",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "patients"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Patient By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/patients/2",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "patients",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Patient",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"fullName\": \"Ahmad Khalil\",\r\n  \"dateOfBirth\": \"1985-06-15\",\r\n  \"gender\": \"Male\",\r\n  \"phoneNumber\": \"0599999999\",\r\n  \"address\": \"Jenin - Palestine\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5075/api/patients/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "patients",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Patient",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/patients/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "patients",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Patient - Validation Error",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_secret_0l9i}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"fullName\": \"\",\r\n  \"dateOfBirth\": \"2030-01-01\",\r\n  \"gender\": \"\",\r\n  \"phoneNumber\": \"\",\r\n  \"address\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5075/api/patients",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "patients"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Seeded Patient",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_secret_02li}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/patients/1001",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "patients",
+                "1001"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Patient - Not Found",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Appointments",
+      "item": [
+        {
+          "name": "Create Appointment",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"patientId\": 2,\r\n  \"appointmentDate\": \"2026-08-20T10:30:00\",\r\n  \"doctorName\": \"Dr. Omar Khalil\",\r\n  \"reason\": \"Routine cardiac checkup\",\r\n  \"status\": \"Scheduled\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5075/api/appointments",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "appointments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Appointments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/appointments",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "appointments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Appointment By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/appointments/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "appointments",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Appointment",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"patientId\": 2,\r\n  \"appointmentDate\": \"2026-08-21T11:00:00\",\r\n  \"doctorName\": \"Dr. Omar Khalil\",\r\n  \"reason\": \"Follow-up cardiac checkup\",\r\n  \"status\": \"Rescheduled\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5075/api/appointments/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "appointments",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Appointment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/appointments/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "appointments",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Filter Appointments By Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/appointments?status=Scheduled",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "appointments"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Scheduled"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Appointments Without Token",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{json_web_token_02li}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/appointments",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "appointments"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/auth/register?email=mohammad@example.com&password=Test123!",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "mohammad@example.com"
+                },
+                {
+                  "key": "password",
+                  "value": "Test123!"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/auth/login?email=mohammad@example.com&password=Test123!",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "mohammad@example.com"
+                },
+                {
+                  "key": "password",
+                  "value": "Test123!"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Patients Without Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/patients",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "patients"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Patients With Token",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{supabase_service_role_api_key_02pu}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5075/api/patients",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5075",
+              "path": [
+                "api",
+                "patients"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "supabase_service_role_api_key_02pu",
+      "secret": true
+    },
+    {
+      "key": "auth_secret_0l9i",
+      "secret": true
+    },
+    {
+      "key": "json_web_token_02li",
+      "secret": true
+    },
+    {
+      "key": "auth_secret_02li",
+      "secret": true
+    },
+    {
+      "key": "supabase_service_role_api_key_02li",
+      "secret": true
+    }
+  ]
+}
