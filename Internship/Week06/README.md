@@ -136,7 +136,7 @@ This reduces duplication and produces a cleaner relational model.
 
 The finalized schema was documented using **dbdiagram.io**.
 
-![Cardiac Patient Monitoring System ERD](Week6Day1/screenshots/cardiac-patient-monitoring-erd.png)
+![Cardiac Patient Monitoring System ERD](Week6Day1/Screenshots/cardiac-patient-monitoring-erd.png)
 
 The ERD became the main reference for implementing the Version 2 database model during the rest of the sprint.
 
