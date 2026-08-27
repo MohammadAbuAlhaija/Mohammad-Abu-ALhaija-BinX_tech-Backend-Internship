@@ -1,9 +1,9 @@
 using CardiacPatientMonitoringSystem.Data;
 using CardiacPatientMonitoringSystem.DTOs;
 using CardiacPatientMonitoringSystem.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authorization;
 
 namespace CardiacPatientMonitoringSystem.Controllers;
 
@@ -19,18 +19,26 @@ public class MedicationsController : ControllerBase
         _context = context;
     }
 
+    // GET: api/medications
+    // Admin, Doctor and Patient can view the medication catalog.
     [HttpGet]
+    [Authorize(Roles = "Admin,Doctor,Patient")]
     public async Task<IActionResult> GetAll()
     {
-        var medications = await _context.Medications.ToListAsync();
+        var medications = await _context.Medications
+            .ToListAsync();
 
         return Ok(medications);
     }
 
+    // GET: api/medications/{id}
+    // Admin, Doctor and Patient can view a medication.
     [HttpGet("{id}")]
+    [Authorize(Roles = "Admin,Doctor,Patient")]
     public async Task<IActionResult> GetById(int id)
     {
-        var medication = await _context.Medications.FindAsync(id);
+        var medication = await _context.Medications
+            .FindAsync(id);
 
         if (medication == null)
         {
@@ -43,8 +51,12 @@ public class MedicationsController : ControllerBase
         return Ok(medication);
     }
 
+    // POST: api/medications
+    // Only Admin can create medications.
     [HttpPost]
-    public async Task<IActionResult> Create(CreateMedicationRequest request)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Create(
+        CreateMedicationRequest request)
     {
         var medication = new Medication
         {
@@ -53,6 +65,7 @@ public class MedicationsController : ControllerBase
         };
 
         _context.Medications.Add(medication);
+
         await _context.SaveChangesAsync();
 
         return CreatedAtAction(
@@ -62,12 +75,16 @@ public class MedicationsController : ControllerBase
         );
     }
 
+    // PUT: api/medications/{id}
+    // Only Admin can update medications.
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(
         int id,
         UpdateMedicationRequest request)
     {
-        var medication = await _context.Medications.FindAsync(id);
+        var medication = await _context.Medications
+            .FindAsync(id);
 
         if (medication == null)
         {
@@ -85,10 +102,14 @@ public class MedicationsController : ControllerBase
         return NoContent();
     }
 
+    // DELETE: api/medications/{id}
+    // Only Admin can delete medications.
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
-        var medication = await _context.Medications.FindAsync(id);
+        var medication = await _context.Medications
+            .FindAsync(id);
 
         if (medication == null)
         {
@@ -99,6 +120,7 @@ public class MedicationsController : ControllerBase
         }
 
         _context.Medications.Remove(medication);
+
         await _context.SaveChangesAsync();
 
         return NoContent();

@@ -95,6 +95,33 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
+// Seed application roles
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager =
+        scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    string[] roles =
+    {
+        "Admin",
+        "Doctor",
+        "Patient"
+    };
+
+    foreach (var roleName in roles)
+    {
+        var roleExists =
+            await roleManager.RoleExistsAsync(roleName);
+
+        if (!roleExists)
+        {
+            await roleManager.CreateAsync(
+                new IdentityRole(roleName)
+            );
+        }
+    }
+}
+
 // Development tools
 if (app.Environment.IsDevelopment())
 {

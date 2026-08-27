@@ -25,7 +25,9 @@ public class DoctorsController : ControllerBase
     }
 
     // POST: api/doctors
+    // Only Admin can create a Doctor profile.
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create(CreateDoctorRequest request)
     {
         var user = await _userManager.FindByIdAsync(request.UserId);
@@ -45,7 +47,8 @@ public class DoctorsController : ControllerBase
         {
             return NotFound(new
             {
-                message = $"Department with ID {request.DepartmentId} was not found."
+                message =
+                    $"Department with ID {request.DepartmentId} was not found."
             });
         }
 
@@ -58,7 +61,8 @@ public class DoctorsController : ControllerBase
             {
                 return NotFound(new
                 {
-                    message = $"Supervisor with ID {request.SupervisorId.Value} was not found."
+                    message =
+                        $"Supervisor with ID {request.SupervisorId.Value} was not found."
                 });
             }
         }
@@ -102,7 +106,9 @@ public class DoctorsController : ControllerBase
     }
 
     // GET: api/doctors/{id}
+    // Admin and Doctor can view a doctor profile.
     [HttpGet("{id}")]
+    [Authorize(Roles = "Admin,Doctor")]
     public async Task<IActionResult> GetById(int id)
     {
         var doctor = await _context.Doctors

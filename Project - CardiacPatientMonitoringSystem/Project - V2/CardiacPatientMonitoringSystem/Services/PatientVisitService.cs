@@ -17,30 +17,45 @@ public class PatientVisitService
     public async Task<(bool Success, string Message)> CreateVisitAsync(
         CreatePatientVisitRequest request)
     {
-        // Business rule 1: Patient must exist
+        // Business rule 1:
+        // The selected Patient must exist.
         var patientExists = await _context.Patients
             .AnyAsync(p => p.Id == request.PatientId);
 
         if (!patientExists)
         {
-            return (false, $"Patient with ID {request.PatientId} was not found.");
+            return (
+                false,
+                $"Patient with ID {request.PatientId} was not found."
+            );
         }
 
-        // Business rule 2: Doctor must exist
+        // Business rule 2:
+        // The selected Doctor must exist.
         var doctorExists = await _context.Doctors
             .AnyAsync(d => d.Id == request.DoctorId);
 
         if (!doctorExists)
         {
-            return (false, $"Doctor with ID {request.DoctorId} was not found.");
+            return (
+                false,
+                $"Doctor with ID {request.DoctorId} was not found."
+            );
         }
 
-        // Business rule 3: Measurement cannot be in the future
+        // Business rule 3:
+        // A measurement cannot be recorded in the future.
         if (request.MeasuredAt > DateTime.Now)
         {
-            return (false, "Measurement date cannot be in the future.");
+            return (
+                false,
+                "Measurement date cannot be in the future."
+            );
         }
 
+        // A Patient Visit creates both a MedicalRecord
+        // and a VitalSign, so both writes are wrapped
+        // inside one database transaction.
         await using var transaction =
             await _context.Database.BeginTransactionAsync();
 
@@ -59,8 +74,10 @@ public class PatientVisitService
             {
                 PatientId = request.PatientId,
                 HeartRate = request.HeartRate,
-                SystolicBloodPressure = request.SystolicBloodPressure,
-                DiastolicBloodPressure = request.DiastolicBloodPressure,
+                SystolicBloodPressure =
+                    request.SystolicBloodPressure,
+                DiastolicBloodPressure =
+                    request.DiastolicBloodPressure,
                 MeasuredAt = request.MeasuredAt
             };
 
@@ -71,11 +88,17 @@ public class PatientVisitService
 
             await transaction.CommitAsync();
 
-            return (true, "Patient visit created successfully.");
+            return (
+                true,
+                "Patient visit created successfully."
+            );
         }
         catch
         {
+            // If either database write fails,
+            // neither part of the visit should remain.
             await transaction.RollbackAsync();
+
             throw;
         }
     }

@@ -103,6 +103,11 @@ public class PatientsApiTests :
             new Claim(
                 ClaimTypes.Email,
                 "integrationtest@example.com"
+            ),
+
+            new Claim(
+                ClaimTypes.Role,
+                "Admin"
             )
         };
 
