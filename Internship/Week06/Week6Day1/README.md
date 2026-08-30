@@ -102,7 +102,7 @@ The final schema was reviewed with **1NF, 2NF, and 3NF** in mind to keep the dat
 
 After finalizing the entities, keys, and relationships, I created an updated **Entity Relationship Diagram (ERD)** using **dbdiagram.io**.
 
-![Cardiac Patient Monitoring System ERD](./screenshots/cardiac-patient-monitoring-erd.png)
+![Cardiac Patient Monitoring System ERD](./Screenshots/cardiac-patient-monitoring-erd.png)
 
 This ERD will be kept updated during the upcoming sprints so that it continues to match the actual database structure.
 
