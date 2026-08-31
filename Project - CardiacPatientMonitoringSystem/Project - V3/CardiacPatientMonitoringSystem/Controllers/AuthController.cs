@@ -45,61 +45,68 @@ public class AuthController : ControllerBase
             });
         }
 
-        var user = new IdentityUser
-        {
-            UserName = request.Email,
-            Email = request.Email
-        };
-
-        var createUserResult =
-            await _userManager.CreateAsync(
-                user,
-                request.Password
-            );
-
-        if (!createUserResult.Succeeded)
-        {
-            return BadRequest(createUserResult.Errors);
-        }
-
-        var roleResult =
-            await _userManager.AddToRoleAsync(
-                user,
-                "Patient"
-            );
-
-        if (!roleResult.Succeeded)
-        {
-            await _userManager.DeleteAsync(user);
-
-            return BadRequest(roleResult.Errors);
-        }
-
-        var patient = new Patient
-        {
-            UserId = user.Id,
-            FullName = request.FullName,
-            DateOfBirth = request.DateOfBirth,
-            Gender = request.Gender
-        };
-
-        _context.Patients.Add(patient);
+        await using var transaction =
+            await _context.Database.BeginTransactionAsync();
 
         try
         {
+            var user = new IdentityUser
+            {
+                UserName = request.Email,
+                Email = request.Email
+            };
+
+            var createUserResult =
+                await _userManager.CreateAsync(
+                    user,
+                    request.Password
+                );
+
+            if (!createUserResult.Succeeded)
+            {
+                await transaction.RollbackAsync();
+
+                return BadRequest(createUserResult.Errors);
+            }
+
+            var roleResult =
+                await _userManager.AddToRoleAsync(
+                    user,
+                    "Patient"
+                );
+
+            if (!roleResult.Succeeded)
+            {
+                await transaction.RollbackAsync();
+
+                return BadRequest(roleResult.Errors);
+            }
+
+            var patient = new Patient
+            {
+                UserId = user.Id,
+                FullName = request.FullName,
+                DateOfBirth = request.DateOfBirth,
+                Gender = request.Gender
+            };
+
+            _context.Patients.Add(patient);
+
             await _context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+
+            return StatusCode(201, new
+            {
+                message = "Patient registered successfully.",
+                patientId = patient.Id
+            });
         }
         catch
         {
-            await _userManager.DeleteAsync(user);
+            await transaction.RollbackAsync();
             throw;
         }
-
-        return StatusCode(201, new
-        {
-            message = "Patient registered successfully.",
-            patientId = patient.Id
-        });
     }
 
     // Register Doctor
@@ -317,6 +324,33 @@ public class AuthController : ControllerBase
             );
         }
 
+        // Add PatientId claim for Patient users
+        if (roles.Contains("Patient"))
+        {
+            var patient =
+                await _context.Patients
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(
+                        p => p.UserId == user.Id
+                    );
+
+            if (patient == null)
+            {
+                return Unauthorized(new
+                {
+                    message =
+                        "Patient profile not found for this account."
+                });
+            }
+
+            claims.Add(
+                new Claim(
+                    "PatientId",
+                    patient.Id.ToString()
+                )
+            );
+        }
+
         var key =
             new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(
@@ -360,3 +394,4 @@ public class AuthController : ControllerBase
         });
     }
 }
+
