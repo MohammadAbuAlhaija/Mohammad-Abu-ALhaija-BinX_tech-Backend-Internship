@@ -214,58 +214,6 @@ public class AuthController : ControllerBase
         });
     }
 
-    // Register Admin
-    // Temporary bootstrap endpoint for creating the first Admin account.
-    [HttpPost("register/admin")]
-    public async Task<IActionResult> RegisterAdmin(
-        RegisterAdminRequest request)
-    {
-        var existingUser =
-            await _userManager.FindByEmailAsync(request.Email);
-
-        if (existingUser != null)
-        {
-            return BadRequest(new
-            {
-                message = "User already exists."
-            });
-        }
-
-        var user = new IdentityUser
-        {
-            UserName = request.Email,
-            Email = request.Email
-        };
-
-        var createUserResult =
-            await _userManager.CreateAsync(
-                user,
-                request.Password
-            );
-
-        if (!createUserResult.Succeeded)
-        {
-            return BadRequest(createUserResult.Errors);
-        }
-
-        var roleResult =
-            await _userManager.AddToRoleAsync(
-                user,
-                "Admin"
-            );
-
-        if (!roleResult.Succeeded)
-        {
-            await _userManager.DeleteAsync(user);
-
-            return BadRequest(roleResult.Errors);
-        }
-
-        return StatusCode(201, new
-        {
-            message = "Admin registered successfully."
-        });
-    }
 
     // Login
     [HttpPost("login")]

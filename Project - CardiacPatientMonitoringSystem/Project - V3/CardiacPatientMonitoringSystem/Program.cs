@@ -95,12 +95,16 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
-// Seed application roles
+// Seed application roles and initial Admin account
 using (var scope = app.Services.CreateScope())
 {
     var roleManager =
         scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
+    var userManager =
+        scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+
+    // Seed Roles
     string[] roles =
     {
         "Admin",
@@ -115,8 +119,59 @@ using (var scope = app.Services.CreateScope())
 
         if (!roleExists)
         {
-            await roleManager.CreateAsync(
-                new IdentityRole(roleName)
+            var roleResult =
+                await roleManager.CreateAsync(
+                    new IdentityRole(roleName)
+                );
+
+            if (!roleResult.Succeeded)
+            {
+                throw new Exception(
+                    $"Failed to create role '{roleName}'."
+                );
+            }
+        }
+    }
+
+    // Seed Initial Admin
+    var adminEmail = "admin@cardiac.com";
+    var adminPassword = "Admin@12345";
+
+    var existingAdmin =
+        await userManager.FindByEmailAsync(adminEmail);
+
+    if (existingAdmin == null)
+    {
+        var adminUser = new IdentityUser
+        {
+            UserName = adminEmail,
+            Email = adminEmail,
+            EmailConfirmed = true
+        };
+
+        var createAdminResult =
+            await userManager.CreateAsync(
+                adminUser,
+                adminPassword
+            );
+
+        if (!createAdminResult.Succeeded)
+        {
+            throw new Exception(
+                "Failed to create initial Admin account."
+            );
+        }
+
+        var addAdminRoleResult =
+            await userManager.AddToRoleAsync(
+                adminUser,
+                "Admin"
+            );
+
+        if (!addAdminRoleResult.Succeeded)
+        {
+            throw new Exception(
+                "Failed to assign Admin role to initial Admin account."
             );
         }
     }
@@ -153,3 +208,4 @@ app.MapControllers();
 app.Run();
 
 public partial class Program { }
+

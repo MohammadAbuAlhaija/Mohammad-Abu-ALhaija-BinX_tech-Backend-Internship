@@ -4,6 +4,7 @@ using CardiacPatientMonitoringSystem.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace CardiacPatientMonitoringSystem.Controllers;
 
@@ -20,29 +21,51 @@ public class PatientMedicationsController : ControllerBase
     }
 
     // GET: api/patientmedications
-    // Admin, Doctor and Patient can view patient medications.
+    // Admin and Doctor can view all patient medications.
+    // Patient can view only their own medications.
     [HttpGet]
     [Authorize(Roles = "Admin,Doctor,Patient")]
     public async Task<IActionResult> GetAll()
     {
-        var patientMedications = await _context.PatientMedications
+        var patientMedicationsQuery = _context.PatientMedications
             .Include(pm => pm.Patient)
             .Include(pm => pm.Medication)
-            .ToListAsync();
+            .AsQueryable();
+
+        // Patients can only view their own medications.
+        if (User.IsInRole("Patient"))
+        {
+            var patientIdClaim =
+                User.FindFirstValue("PatientId");
+
+            if (!int.TryParse(patientIdClaim, out var patientId))
+            {
+                return Forbid();
+            }
+
+            patientMedicationsQuery =
+                patientMedicationsQuery
+                    .Where(pm => pm.PatientId == patientId);
+        }
+
+        var patientMedications =
+            await patientMedicationsQuery.ToListAsync();
 
         return Ok(patientMedications);
     }
 
     // GET: api/patientmedications/{id}
-    // Admin, Doctor and Patient can view a patient medication.
+    // Admin and Doctor can view any patient medication.
+    // Patient can view only their own medication.
     [HttpGet("{id}")]
     [Authorize(Roles = "Admin,Doctor,Patient")]
     public async Task<IActionResult> GetById(int id)
     {
-        var patientMedication = await _context.PatientMedications
-            .Include(pm => pm.Patient)
-            .Include(pm => pm.Medication)
-            .FirstOrDefaultAsync(pm => pm.Id == id);
+        var patientMedication =
+            await _context.PatientMedications
+                .Include(pm => pm.Patient)
+                .Include(pm => pm.Medication)
+                .FirstOrDefaultAsync(pm => pm.Id == id);
 
         if (patientMedication == null)
         {
@@ -51,6 +74,23 @@ public class PatientMedicationsController : ControllerBase
                 message =
                     $"Patient medication with ID {id} was not found."
             });
+        }
+
+        // Ownership check for Patient users.
+        if (User.IsInRole("Patient"))
+        {
+            var patientIdClaim =
+                User.FindFirstValue("PatientId");
+
+            if (!int.TryParse(patientIdClaim, out var patientId))
+            {
+                return Forbid();
+            }
+
+            if (patientMedication.PatientId != patientId)
+            {
+                return Forbid();
+            }
         }
 
         return Ok(patientMedication);
@@ -63,8 +103,9 @@ public class PatientMedicationsController : ControllerBase
     public async Task<IActionResult> Create(
         CreatePatientMedicationRequest request)
     {
-        var patientExists = await _context.Patients
-            .AnyAsync(p => p.Id == request.PatientId);
+        var patientExists =
+            await _context.Patients
+                .AnyAsync(p => p.Id == request.PatientId);
 
         if (!patientExists)
         {
@@ -75,8 +116,9 @@ public class PatientMedicationsController : ControllerBase
             });
         }
 
-        var medicationExists = await _context.Medications
-            .AnyAsync(m => m.Id == request.MedicationId);
+        var medicationExists =
+            await _context.Medications
+                .AnyAsync(m => m.Id == request.MedicationId);
 
         if (!medicationExists)
         {
@@ -128,8 +170,9 @@ public class PatientMedicationsController : ControllerBase
             });
         }
 
-        var patientExists = await _context.Patients
-            .AnyAsync(p => p.Id == request.PatientId);
+        var patientExists =
+            await _context.Patients
+                .AnyAsync(p => p.Id == request.PatientId);
 
         if (!patientExists)
         {
@@ -140,8 +183,9 @@ public class PatientMedicationsController : ControllerBase
             });
         }
 
-        var medicationExists = await _context.Medications
-            .AnyAsync(m => m.Id == request.MedicationId);
+        var medicationExists =
+            await _context.Medications
+                .AnyAsync(m => m.Id == request.MedicationId);
 
         if (!medicationExists)
         {
