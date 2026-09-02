@@ -3,22 +3,29 @@ namespace CardiacPatientMonitoringSystem.Middleware;
 public class RequestLoggingMiddleware
 {
     private readonly RequestDelegate _next;
+    private readonly ILogger<RequestLoggingMiddleware> _logger;
 
-    public RequestLoggingMiddleware(RequestDelegate next)
+    public RequestLoggingMiddleware(
+        RequestDelegate next,
+        ILogger<RequestLoggingMiddleware> logger)
     {
         _next = next;
+        _logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context)
     {
-        Console.WriteLine(
-            $"Request: {context.Request.Method} {context.Request.Path}"
+        _logger.LogInformation(
+            "Request: {Method} {Path}",
+            context.Request.Method,
+            context.Request.Path
         );
 
         await _next(context);
 
-        Console.WriteLine(
-            $"Response Status: {context.Response.StatusCode}"
+        _logger.LogInformation(
+            "Response Status: {StatusCode}",
+            context.Response.StatusCode
         );
     }
 }
