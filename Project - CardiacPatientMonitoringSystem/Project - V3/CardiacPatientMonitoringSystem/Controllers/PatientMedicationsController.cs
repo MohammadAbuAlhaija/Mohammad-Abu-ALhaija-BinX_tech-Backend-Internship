@@ -28,8 +28,7 @@ public class PatientMedicationsController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var patientMedicationsQuery = _context.PatientMedications
-            .Include(pm => pm.Patient)
-            .Include(pm => pm.Medication)
+            .AsNoTracking()
             .AsQueryable();
 
         // Patients can only view their own medications.
@@ -49,7 +48,21 @@ public class PatientMedicationsController : ControllerBase
         }
 
         var patientMedications =
-            await patientMedicationsQuery.ToListAsync();
+            await patientMedicationsQuery
+                .Select(pm => new
+                {
+                    pm.Id,
+                    pm.PatientId,
+                    PatientName = pm.Patient.FullName,
+                    pm.MedicationId,
+                    MedicationName = pm.Medication.Name,
+                    MedicationDescription = pm.Medication.Description,
+                    pm.Dosage,
+                    pm.Frequency,
+                    pm.StartDate,
+                    pm.EndDate
+                })
+                .ToListAsync();
 
         return Ok(patientMedications);
     }

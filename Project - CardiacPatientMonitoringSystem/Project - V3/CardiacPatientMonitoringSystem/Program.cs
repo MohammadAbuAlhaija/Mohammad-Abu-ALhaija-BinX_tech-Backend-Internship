@@ -98,6 +98,26 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+
+    var context =
+        scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    var userManager =
+        scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+
+    var roleManager =
+        scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    await DevelopmentDataSeeder.SeedAsync(
+        context,
+        userManager,
+        roleManager
+    );
+}
+
 // Seed application roles and initial Admin account
 using (var scope = app.Services.CreateScope())
 {
