@@ -60,6 +60,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         .EnableSensitiveDataLogging()
 );
 
+// Redis Distributed Cache
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration =
+        builder.Configuration.GetConnectionString("Redis");
+});
+
 // Application Services
 builder.Services.AddScoped<PatientVisitService>();
 

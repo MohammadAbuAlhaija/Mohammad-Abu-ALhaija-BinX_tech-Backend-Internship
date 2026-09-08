@@ -4,6 +4,8 @@ using CardiacPatientMonitoringSystem.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace CardiacPatientMonitoringSystem.Controllers;
 
@@ -13,10 +15,16 @@ namespace CardiacPatientMonitoringSystem.Controllers;
 public class MedicationsController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IDistributedCache _cache;
 
-    public MedicationsController(AppDbContext context)
+    private const string MedicationsCacheKey = "medications:all";
+
+    public MedicationsController(
+        AppDbContext context,
+        IDistributedCache cache)
     {
         _context = context;
+        _cache = cache;
     }
 
     // GET: api/medications
@@ -25,8 +33,38 @@ public class MedicationsController : ControllerBase
     [Authorize(Roles = "Admin,Doctor,Patient")]
     public async Task<IActionResult> GetAll()
     {
+        // Try to get medications from Redis cache.
+        var cachedData =
+            await _cache.GetStringAsync(MedicationsCacheKey);
+
+        if (cachedData is not null)
+        {
+            var cachedMedications =
+                JsonSerializer.Deserialize<List<Medication>>(cachedData);
+
+            if (cachedMedications is not null)
+            {
+                return Ok(cachedMedications);
+            }
+        }
+
+        // Cache miss: get medications from the database.
         var medications = await _context.Medications
+            .AsNoTracking()
             .ToListAsync();
+
+        // Store the result in Redis for 10 minutes.
+        var serializedMedications =
+            JsonSerializer.Serialize(medications);
+
+        await _cache.SetStringAsync(
+            MedicationsCacheKey,
+            serializedMedications,
+            new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow =
+                    TimeSpan.FromMinutes(10)
+            });
 
         return Ok(medications);
     }
@@ -68,6 +106,9 @@ public class MedicationsController : ControllerBase
 
         await _context.SaveChangesAsync();
 
+        // Invalidate the medication catalog cache.
+        await _cache.RemoveAsync(MedicationsCacheKey);
+
         return CreatedAtAction(
             nameof(GetById),
             new { id = medication.Id },
@@ -99,6 +140,9 @@ public class MedicationsController : ControllerBase
 
         await _context.SaveChangesAsync();
 
+        // Invalidate the medication catalog cache.
+        await _cache.RemoveAsync(MedicationsCacheKey);
+
         return NoContent();
     }
 
@@ -122,6 +166,9 @@ public class MedicationsController : ControllerBase
         _context.Medications.Remove(medication);
 
         await _context.SaveChangesAsync();
+
+        // Invalidate the medication catalog cache.
+        await _cache.RemoveAsync(MedicationsCacheKey);
 
         return NoContent();
     }
