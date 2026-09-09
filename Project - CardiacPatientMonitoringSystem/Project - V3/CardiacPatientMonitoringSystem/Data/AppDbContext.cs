@@ -68,6 +68,11 @@ public class AppDbContext : IdentityDbContext
             .HasForeignKey<Doctor>(d => d.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // Composite index for appointment filtering
+        builder.Entity<Appointment>()
+            .HasIndex(a => new { a.PatientId, a.Status })
+            .HasDatabaseName("IX_Appointments_PatientId_Status");
+
         // Seed initial reference data
         builder.Entity<Department>().HasData(
             new Department

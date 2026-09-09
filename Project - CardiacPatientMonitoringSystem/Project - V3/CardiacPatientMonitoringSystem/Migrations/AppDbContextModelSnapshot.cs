@@ -45,13 +45,14 @@ namespace CardiacPatientMonitoringSystem.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("DoctorId");
 
-                    b.HasIndex("PatientId");
+                    b.HasIndex("PatientId", "Status")
+                        .HasDatabaseName("IX_Appointments_PatientId_Status");
 
                     b.ToTable("Appointments");
                 });
